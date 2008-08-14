@@ -49,6 +49,7 @@ class VisitorTrackingMiddleware:
 
             # update the tracking information
             visitor.user = user
+            visitor.user_agent = request.META.get('HTTP_USER_AGENT', '')
             visitor.url = request.path
             visitor.last_update = datetime.now()
             visitor.save()

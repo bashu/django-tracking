@@ -5,6 +5,7 @@ class Visitor(models.Model):
     session_key = models.CharField(max_length=40, primary_key=True)
     ip_address = models.CharField(max_length=20)
     user = models.ForeignKey(User, null=True)
+    user_agent = models.CharField(max_length=255)
     url = models.CharField(max_length=255)
     last_update = models.DateTimeField()
 
