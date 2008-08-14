@@ -1,7 +1,5 @@
 from django import template
-from django.conf import settings
 from tracking.models import Visitor
-from datetime import datetime, timedelta
 
 register = template.Library()
 
@@ -13,15 +11,7 @@ class VisitorsOnSite(template.Node):
         self.varname = varname
 
     def render(self, context):
-        # get any specified timeout from the settings file, or use 5 minutes by default
-        try:
-            timeout = settings.TRACKING_TIMEOUT
-        except AttributeError:
-            timeout = 5
-
-        now = datetime.now()
-        cutoff = now - timedelta(minutes=timeout)
-        context[self.varname] = Visitor.objects.filter(last_update__gte=cutoff).count()
+        context[self.varname] = Visitor.objects.active().count()
         return ''
 
 def visitors_on_site(parser, token):
