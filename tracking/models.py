@@ -4,9 +4,13 @@ from tracking import utils
 from datetime import datetime, timedelta
 
 class VisitorManager(models.Manager):
-    def active(self):
+    def active(self, timeout=None):
+        if not timeout:
+            timeout = utils.get_timeout()
+
         now = datetime.now()
-        cutoff = now - timedelta(minutes=utils.get_timeout())
+        cutoff = now - timedelta(minutes=timeout)
+        
         return self.get_query_set().filter(last_update__gte=cutoff)
 
 class Visitor(models.Model):
