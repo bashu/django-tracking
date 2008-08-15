@@ -72,7 +72,7 @@ class VisitorTrackingMiddleware:
                     visitor = Visitor.objects.get(
                                     ip_address=ip_address,
                                     user_agent=user_agent,
-                                    last_update=cutoff
+                                    last_update__gte=cutoff
                                 )
                     visitor.session_key = session_key
                 except Visitor.DoesNotExist:
