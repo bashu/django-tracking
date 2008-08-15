@@ -10,7 +10,7 @@ class VisitorManager(models.Manager):
 
         now = datetime.now()
         cutoff = now - timedelta(minutes=timeout)
-        
+
         return self.get_query_set().filter(last_update__gte=cutoff)
 
 class Visitor(models.Model):
@@ -21,9 +21,24 @@ class Visitor(models.Model):
     referrer = models.CharField(max_length=255)
     url = models.CharField(max_length=255)
     page_views = models.PositiveIntegerField(default=0)
+    session_start = models.DateTimeField()
     last_update = models.DateTimeField()
 
     objects = VisitorManager()
+
+    def _time_on_site(self):
+        if self.session_start:
+            seconds = (self.last_update - self.session_start).seconds
+
+            hours = seconds / 3600
+            seconds -= hours * 3600
+            minutes = seconds / 60
+            seconds -= minutes * 60
+
+            return u'%i:%i:%i' % (hours, minutes, seconds)
+        else:
+            return u'unknown'
+    time_on_site = property(_time_on_site)
 
     class Meta:
         ordering = ['-last_update']

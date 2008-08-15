@@ -97,6 +97,7 @@ class VisitorTrackingMiddleware:
 
                 # reset the number of pages they've been to
                 visitor.page_views = 0
+                visitor.session_start = now
 
             visitor.url = request.path
             visitor.page_views += 1
