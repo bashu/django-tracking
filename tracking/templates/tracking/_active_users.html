@@ -1,0 +1,21 @@
+<div class="total">
+    {{ active.count }} active user{{ active.count|pluralize }}
+</div>
+<div class="guests">
+    {{ guests.count }} guest{{ guests.count|pluralize }}
+    {% if user.is_superuser %}
+    {% for visitor in guests %}
+    {% if forloop.first %}<ul class="active-guests">{% endif %}
+        <li>{{ visitor.ip_address }}</li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+    {% endif %}
+</div>
+<div class="registered">
+    {{ registered.count }} registered user{{ registered.count|pluralize }}
+    {% for visitor in registered %}
+    {% if forloop.first %}<ul class="active-users">{% endif %}
+        <li>{{ visitor.user }}</li>
+    {% if forloop.last %}</ul>{% endif %}
+    {% endfor %}
+</div>
