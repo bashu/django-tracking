@@ -35,7 +35,7 @@ class Visitor(models.Model):
             minutes = seconds / 60
             seconds -= minutes * 60
 
-            return u'%02i:%02i:%02i' % (hours, minutes, seconds)
+            return u'%i:%02i:%02i' % (hours, minutes, seconds)
         else:
             return u'unknown'
     time_on_site = property(_time_on_site)

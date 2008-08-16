@@ -1,0 +1,107 @@
+django-tracking is a simple attempt at keeping track of visitors to Django-powered Web sites.  It also offers basic blacklisting capabilities.
+
+==Features==
+
+  * Tracks the following information about your visitors:
+    * Session key
+    * IP address
+    * User agent
+    * Whether or not they are a registered user and logged in
+    * Where they came from (http-referer)
+    * What page on your site they last visited
+    * How many pages on your site they have visited
+  * Allows user-agent filtering for visitor tracking
+  * Automatic clean-up of old visitor records
+  * Can ban certain IP addresses, rendering the site useless to visitors from those IP's (great for stopping spam)
+  * The ability to have a live feed of active users on your website
+  * Template tags to:
+    * display how many active users there are on your site
+    * determine how many active users are on the same page within your site
+
+==Requirements==
+
+As far as I am aware, the only requirement for django-tracking to work is a modern version of Django.  I developed the project on Django 1.0 alpha 2 and beta 1 (currently on revision 8375).  It is designed to work with the newforms-admin functionality.
+
+==Installation==
+
+Download `django-tracking` using *one* of the following methods:
+
+===Checkout from Subversion===
+
+{{{
+svn co http://django-tracking.googlecode.com/svn/trunk/ django-tracking
+}}}
+
+===Package Download===
+
+Download the latest `.tar.gz` file from the downloads section and extract it somewhere you'll remember.
+
+The `setup.py` script for this project doesn't seem to install the templates associated with `django-tracking` (at least on my wife's Mac), but I am working to figure out why.
+
+==Configuration==
+
+First of all, you must add this project to your list of `INSTALLED_APPS` in `settings.py`:
+
+{{{
+INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    ...
+    'tracking',
+    ...
+)
+}}}
+
+Run `manage.py syncdb`.  This creates a few tables in your database that are necessary for operation.
+
+Depending on how you wish to use this application, you have a few options:
+
+===Visitor Tracking===
+
+Add `tracking.middleware.VisitorTrackingMiddleware` to your `MIDDLEWARE_CLASSES` in `settings.py`.
+
+====Automatic Visitor Clean-Up====
+
+If you want to have Django automatically clean past visitor information out your database, put `tracking.middleware.VisitorCleanUpMiddleware`in your `MIDDLEWARE_CLASSES`.
+
+===IP Banning===
+
+Add `tracking.middleware.BannedIPMiddleware` to your `MIDDLEWARE_CLASSES` in `settings.py`.  I would recommend making this the very first item in `MIDDLEWARE_CLASSES` so your banned users do not have to drill through any other middleware before Django realizes they don't belong on your site.
+
+===Visitors on Page (template tag)===
+
+Make sure that `django.core.context_processors.request` is somewhere in your `TEMPLATE_CONTEXT_PROCESSORS` tuple.  This context processor makes the `request` object accessible to your templates.  This application uses the `request` object to determine what page the user is looking at in a template tag.
+
+==Usage==
+
+To display the number of active users there are in one of your templates, make sure you have `{% load tracking_tags %}` somewhere in your template and do something like this:
+
+{{{
+{% visitors_on_site as visitors %}
+<p>
+    {{ visitors }} active user{{ visitors|pluralize }}
+</p>
+}}}
+
+If you also want to show how many people are looking at the same page:
+
+{{{
+{% visitors_on_page as same_page %}
+<p>
+    {{ same_page }} of {{ visitors }} active user{{ visitors|pluralize }}
+    {% ifequal same_page 1 %}is{% else %}are{% endifequal %} reading this page
+</p>
+}}}
+
+If you don't want particular areas of your site to be tracked, you may define a list of prefixes in your `settings.py` using the `NO_TRACKING_PREFIXES`.  For example, if you didn't want visits to the `/family/` section of your website, set `NO_TRACKING_PREFIXES` to `['/family/']`.
+
+If you don't want to count certain user-agents, such as Yahoo!'s Slurp and Google's Googlebot, you may add keywords to your visitor tracking in your Django administration interface.  Look for "Untracked User-Agents" and add a keyword that distinguishes a particular user-agent.  Any visitors with the keyword in their user-agent string will not be tracked.
+
+By default, active users include any visitors within the last 10 minutes.  If you would like to override that setting, just set `TRACKING_TIMEOUT` to however many minutes you want in your `settings.py`.
+
+For automatic visitor clean-up, any records older than 24 hours are removed by default.  If you would like to override that setting, set `TRACKING_CLEANUP_TIMEOUT` to however many hours you want in your `settings.py`.
+
+Good luck!  Please contact me with any questions or concerns you have with the project!

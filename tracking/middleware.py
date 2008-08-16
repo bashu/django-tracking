@@ -1,5 +1,6 @@
 from django.core.urlresolvers import reverse
 from django.http import Http404
+from django.shortcuts import render_to_response
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
@@ -34,12 +35,7 @@ class VisitorTrackingMiddleware:
             if str(user_agent).find(ua.keyword) != -1:
                 return
 
-        # get a list of prefixes that shouldn't be tracked
-        try:
-            prefixes = settings.NO_TRACKING_PREFIXES
-        except AttributeError:
-            prefixes = []
-
+        prefixes = utils.get_untracked_prefixes()
         # don't track media files
         prefixes.append(settings.MEDIA_URL)
         prefixes.append(settings.ADMIN_MEDIA_PREFIX)
@@ -104,10 +100,21 @@ class VisitorTrackingMiddleware:
             visitor.last_update = now
             visitor.save()
 
+class VisitorCleanUpMiddleware:
+    """
+    Clean up old visitor tracking records in the database
+    """
+    def process_request(self, request):
+        timeout = datetime.now() - timedelta(hours=utils.get_cleanup_timeout())
+        Visitor.objects.filter(last_update__lte=timeout).delete()
+
 class BannedIPMiddleware:
     """
-    Returns an Http404 error for any page request from a banned IP.  IP addresses
+    Raises an Http404 error for any page request from a banned IP.  IP addresses
     may be added to the list of banned IPs via the Django admin.
+
+    The banned users do not actually receive the 404 error--instead they get
+    an "Internal Server Error", effectively eliminating any access to the site.
     """
     def process_request(self, request):
         # compile a list of all banned IP addresses

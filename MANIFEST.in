@@ -1,0 +1,2 @@
+include README tracking/templates/tracking/_active_users.html tracking/templates/tracking/json.html tracking/templates/tracking/refresh_active_users.js
+recursive-include tracking/*
