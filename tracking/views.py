@@ -10,11 +10,19 @@ def update_active_users(request):
     """
     if request.is_ajax():
         active = Visitor.objects.active()
+
+        # For some reason, there is an occasional error message like:
+        # 'WSGIRequest' object has no attribute 'user'
+        try:
+            user = request.user
+        except AttributeError:
+            user = None
+
         info = {
             'active': active,
             'registered': active.filter(user__isnull=False),
             'guests': active.filter(user__isnull=True),
-            'user': request.user
+            'user': user
         }
 
         # render the list of active users
