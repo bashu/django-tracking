@@ -170,6 +170,7 @@ class GoogleAnalyticsMiddleware:
 
         # talk to Google Analytics
         conn = urllib2.urlopen('http://www.google-analytics.com/__utm.gif', data)
+        conn.read()
 
         # send the response back to the client
         return response
