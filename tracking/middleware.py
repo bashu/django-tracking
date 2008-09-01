@@ -6,6 +6,12 @@ from django.contrib.auth.models import AnonymousUser
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 from tracking import utils
 from datetime import datetime, timedelta
+import random
+import time
+import re
+import urllib2
+
+title_re = re.compile('<title>(.*?)</title>')
 
 class VisitorTrackingMiddleware:
     """
@@ -123,3 +129,47 @@ class BannedIPMiddleware:
         # check to see if the current user's IP address is in that list
         if request.META.get('REMOTE_ADDR', '') in ips:
             raise Http404
+
+class GoogleAnalyticsMiddleware:
+    """
+    This is a server-side version of the Google Analytics tracking.  It should
+    be able to track things like requests to RSS feeds and whatnot, but it does
+    tend to lose some information, such as where the request is coming from.
+    """
+    def process_response(self, request, response):
+        # get the title from the response if possible
+        try:
+            title = title_re.search(response.content).group(1)
+        except:
+            title = ''
+
+        # setup a dictionary of values for use in the query string
+        info = {
+            'id': settings.GOOGLE_ANALYTICS_ID,
+            'host': request.META.get('HTTP_HOST', ''),
+            'path': request.META.get('PATH_INFO', '/'),
+            'referer': request.META.get('HTTP_REFERER', ''),
+            'uservar': '%s; %s' % (
+                                    request.META.get('REMOTE_ADDR', ''),
+                                    request.META.get('HTTP_USER_AGENT', 'unknown'),
+                                ),
+            'rand_request': random.randint(1000000000, 9999999999),
+            'rand_cookie': random.randint(10000000, 99999999),
+            'rand_number': random.randint(1000000000, 2147483647),
+            'today': int(time.mktime(datetime.now().timetuple())),
+            'resolution': '-',
+            'color_depth': '-',
+            'language': '-',
+            'java': '-',
+            'flash': '-',
+            'title': title,
+        }
+
+        # put all of the info values where they belong
+        data = 'utmwv=4.3&utmn=%(rand_request)s&utmsr=%(resolution)s&utmsc=%(color_depth)s&utmul=%(language)s&utmje=%(java)s&utmfl=%(flash)s&utmdt=%(title)s&utmhn=%(host)s&utmr=%(referer)s&utmp=%(path)s&utmac=%(id)s&utmcc=__utma%%3D%(rand_cookie)s.%(rand_number)s.%(today)s.%(today)s.%(today)s.2%%3B%%2B__utmb%%3D%(rand_cookie)s%%3B%%2B__utmc%%3D%(rand_cookie)s%%3B%%2B__utmz%%3D%(rand_cookie)s.%(today)s.2.2.utmccn%%3D(direct)%%7Cutmcsr%%3D(direct)%%7Cutmcmd%%3D(none)%%3B%%2B__utmv%%3D%(rand_cookie)s.%(uservar)s%%3B' % info
+
+        # talk to Google Analytics
+        conn = urllib2.urlopen('http://www.google-analytics.com/__utm.gif', data)
+
+        # send the response back to the client
+        return response
