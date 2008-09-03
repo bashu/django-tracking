@@ -10,6 +10,7 @@ import random
 import time
 import re
 import urllib2
+import urllib
 
 title_re = re.compile('<title>(.*?)</title>')
 
@@ -143,16 +144,18 @@ class GoogleAnalyticsMiddleware:
         except:
             title = ''
 
+        uservar = '%s; %s' % (
+                                request.META.get('REMOTE_ADDR', ''),
+                                request.META.get('HTTP_USER_AGENT', 'unknown'),
+                            )
+
         # setup a dictionary of values for use in the query string
         info = {
             'id': settings.GOOGLE_ANALYTICS_ID,
             'host': request.META.get('HTTP_HOST', ''),
             'path': request.META.get('PATH_INFO', '/'),
             'referer': request.META.get('HTTP_REFERER', ''),
-            'uservar': '%s; %s' % (
-                                    request.META.get('REMOTE_ADDR', ''),
-                                    request.META.get('HTTP_USER_AGENT', 'unknown'),
-                                ),
+            'uservar': uservar,
             'rand_request': random.randint(1000000000, 9999999999),
             'rand_cookie': random.randint(10000000, 99999999),
             'rand_number': random.randint(1000000000, 2147483647),
@@ -166,10 +169,13 @@ class GoogleAnalyticsMiddleware:
         }
 
         # put all of the info values where they belong
-        data = 'utmwv=4.3&utmn=%(rand_request)s&utmsr=%(resolution)s&utmsc=%(color_depth)s&utmul=%(language)s&utmje=%(java)s&utmfl=%(flash)s&utmdt=%(title)s&utmhn=%(host)s&utmr=%(referer)s&utmp=%(path)s&utmac=%(id)s&utmcc=__utma%%3D%(rand_cookie)s.%(rand_number)s.%(today)s.%(today)s.%(today)s.2%%3B%%2B__utmb%%3D%(rand_cookie)s%%3B%%2B__utmc%%3D%(rand_cookie)s%%3B%%2B__utmz%%3D%(rand_cookie)s.%(today)s.2.2.utmccn%%3D(direct)%%7Cutmcsr%%3D(direct)%%7Cutmcmd%%3D(none)%%3B%%2B__utmv%%3D%(rand_cookie)s.%(uservar)s%%3B' % info
+        data = 'utmwv=4.3&utmn=%(rand_request)s&utmsr=%(resolution)s&utmsc=%(color_depth)s&utmul=%(language)s&utmje=%(java)s&utmfl=%(flash)s&utmdt=%(title)s&utmhn=%(host)s&utmr=%(referer)s&utmp=%(path)s&utmac=%(id)s&utmcc=__utma%%3D%(rand_cookie)s.%(rand_number)s.%(today)s.%(today)s.%(today)s.2%%3B%%2B__utmz%%3D%(rand_cookie)s.%(today)s.2.2.utmccn%%3D(direct)%%7Cutmcsr%%3D(direct)%%7Cutmcmd%%3D(none)%%3B%%2B__utmv%%3D%(rand_cookie)s.%(uservar)s%%3B' % info
+        url = 'http://www.google-analytics.com/__utm.gif'
+
+        raise Exception(url + data + '\n' + urllib.urlencode(info))
 
         # talk to Google Analytics
-        conn = urllib2.urlopen('http://www.google-analytics.com/__utm.gif', data)
+        conn = urllib2.urlopen(url, data)
         conn.read()
 
         # send the response back to the client
