@@ -9,8 +9,7 @@ from datetime import datetime, timedelta
 import random
 import time
 import re
-import urllib2
-import urllib
+import urllib, urllib2
 
 title_re = re.compile('<title>(.*?)</title>')
 
@@ -144,38 +143,43 @@ class GoogleAnalyticsMiddleware:
         except:
             title = ''
 
-        uservar = '%s; %s' % (
-                                request.META.get('REMOTE_ADDR', ''),
-                                request.META.get('HTTP_USER_AGENT', 'unknown'),
-                            )
+        host = request.META.get('HTTP_HOST', '')
+        path = request.META.get('PATH_INFO', '/')
+
+        cookie = random.randint(10000000, 99999999)
+        rand = random.randint(1000000000, 3188019257283953000)
+        today = int(time.mktime(datetime.now().timetuple()))
+        small = random.randint(3, 50)
+
+        utmcc = '__utma=%(r1)i.%(r2)i.%(r3)i.%(r3)i.%(r3)i.%(r4)i;+__utmz=%(r1)i.%(r3)i.%(r4)i.%(r4)i.utmscr=%(host)s|utmccn=(referral)|utmcmd=referral|utmcct=%(path)s;' % {
+            'r1': cookie,       'r2': rand,         'r3': today,
+            'r4': small,        'host': host,       'path': path
+        }
 
         # setup a dictionary of values for use in the query string
         info = {
-            'id': settings.GOOGLE_ANALYTICS_ID,
-            'host': request.META.get('HTTP_HOST', ''),
-            'path': request.META.get('PATH_INFO', '/'),
-            'referer': request.META.get('HTTP_REFERER', ''),
-            'uservar': uservar,
-            'rand_request': random.randint(1000000000, 9999999999),
-            'rand_cookie': random.randint(10000000, 99999999),
-            'rand_number': random.randint(1000000000, 2147483647),
-            'today': int(time.mktime(datetime.now().timetuple())),
-            'resolution': '-',
-            'color_depth': '-',
-            'language': '-',
-            'java': '-',
-            'flash': '-',
-            'title': title,
+            'utmwv': 4.3,
+            'utmac': settings.GOOGLE_ANALYTICS_ID,
+            'utmhn': host,
+            'utmp': path,
+            'utmr': request.META.get('HTTP_REFERER', '-'),
+            'utmcc': utmcc,
+            'utmn': random.randint(1000000000, 9999999999),
+            'utmcs': 'UTF-8',
+            'utmsr': '800x600',                                     # resolution
+            'utmsc': '16-bit',                                      # color-depth
+            'utmul': 'en-us',                                       # language
+            'utmje': '0',                                           # java
+            'utmfl': '9.0  r115',                                   # flash
+            'utmdt': title,                                         # title
         }
 
         # put all of the info values where they belong
-        data = 'utmwv=4.3&utmn=%(rand_request)s&utmsr=%(resolution)s&utmsc=%(color_depth)s&utmul=%(language)s&utmje=%(java)s&utmfl=%(flash)s&utmdt=%(title)s&utmhn=%(host)s&utmr=%(referer)s&utmp=%(path)s&utmac=%(id)s&utmcc=__utma%%3D%(rand_cookie)s.%(rand_number)s.%(today)s.%(today)s.%(today)s.2%%3B%%2B__utmz%%3D%(rand_cookie)s.%(today)s.2.2.utmccn%%3D(direct)%%7Cutmcsr%%3D(direct)%%7Cutmcmd%%3D(none)%%3B%%2B__utmv%%3D%(rand_cookie)s.%(uservar)s%%3B' % info
         url = 'http://www.google-analytics.com/__utm.gif'
-
-        raise Exception(url + data + '\n' + urllib.urlencode(info))
+        data = '&'.join(['%s=%s' % (k, urllib.quote(str(info[k]))) for k in info])
 
         # talk to Google Analytics
-        conn = urllib2.urlopen(url, data)
+        conn = urllib2.urlopen('%s?%s' % (url, data))
         conn.read()
 
         # send the response back to the client
