@@ -42,9 +42,12 @@ class VisitorTrackingMiddleware:
                 return
 
         prefixes = utils.get_untracked_prefixes()
+
         # don't track media files
-        prefixes.append(settings.MEDIA_URL)
-        prefixes.append(settings.ADMIN_MEDIA_PREFIX)
+        if settings.MEDIA_URL:
+            prefixes.append(settings.MEDIA_URL)
+        if settings.ADMIN_MEDIA_PREFIX:
+            prefixes.append(settings.ADMIN_MEDIA_PREFIX)
 
         # ensure that the request.path does not begin with any of the prefixes
         validURL = True
@@ -134,7 +137,9 @@ class GoogleAnalyticsMiddleware:
     """
     This is a server-side version of the Google Analytics tracking.  It should
     be able to track things like requests to RSS feeds and whatnot, but it does
-    tend to lose some information, such as where the request is coming from.
+    tend to lose some information, such as the IP the request is coming from.
+
+    ******* THIS IS NON-OPERATIONAL FOR THE TIME BEING *******
     """
     def process_response(self, request, response):
         # get the title from the response if possible
