@@ -5,6 +5,7 @@ from django.shortcuts import render_to_response
 from django.conf import settings
 from tracking.models import Visitor
 from datetime import datetime
+import unicodedata
 
 def update_active_users(request):
     """
