@@ -37,7 +37,7 @@ def get_active_users(request):
     easier manipulation with JavaScript.
     """
     if request.is_ajax():
-        active = Visitor.objects.active()
+        active = Visitor.objects.active().reverse()
         now = datetime.now()
 
         # we don't put the session key or IP address here for security reasons
