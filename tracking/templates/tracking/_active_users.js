@@ -56,10 +56,12 @@ function createMarkers() {
                             user.geoip.city + '</h3><div>' + img +
                             user.geoip.region_name + ', ' +
                             user.geoip.country_name + '</div>' +
-                            '<div>Looking at <span id="auu-' + user.id +'">' +
+                            '<div><strong>Viewing</strong> <span id="auu-' + user.id +'">' +
                             url + '</span></div>' +
-                            '<div>Using ' + user.user_agent + '</div>' +
-                            '<div>Updated <span id="lu-' + user.id + '">' +
+                            '<div><strong>Using</strong> ' + user.user_agent + '</div>' +
+                            '<div><strong>From</strong> <a href="' + user.referrer + '">' +
+                            user.referrer + '</a></div>' +
+                            '<div><strong>Updated</strong> <span id="lu-' + user.id + '">' +
                             user.last_update + '</span>' +
                             ' seconds ago</div></div>';
                         userList.prepend(listHtml);
