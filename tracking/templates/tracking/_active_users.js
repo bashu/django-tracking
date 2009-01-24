@@ -18,6 +18,14 @@ $(document).ready(function () {
 
         // refresh the markers every 5 seconds or so
         setInterval('createMarkers()', 5000);
+
+        $('.active-user').live('click', function () {
+                var num = parseInt($(this).attr('id').replace('au', ''));
+                marker = markerList[num];
+
+                AUmap.openInfoWindowHtml(marker.getLatLng(), blurbs[num]);
+                AUmap.panTo(marker.getLatLng());
+            });
     } else {
         alert('This page requires a modern browser which supports Google Maps!');
     }
@@ -35,7 +43,7 @@ function createMarkers() {
 
             $.each(json.users, function (i, user) {
                     var url = '<a href="' + user.url + '">' + user.url + '</a>';
-                    if (!markerList[user.id] && user.geoip) {
+                    if (!markerList[user.id] && user.geoip && user.geoip.city) {
                         // determine which flag to use
                         var img = '<img src="/static/images/flags/' +
                                 user.geoip.country_code.toLowerCase() +
@@ -43,11 +51,11 @@ function createMarkers() {
 
                         // come up with some HTML to put in the list
                         var listHtml = '<div id="au-' + user.id + '" ' +
-                            'class="active-user location-info"><h3>' + 
+                            'class="active-user location-info"><h3>' +
                             user.geoip.city + '</h3><div>' + img +
                             user.geoip.region_name + ', ' +
                             user.geoip.country_name + '</div>' +
-                            '<div>Looking at <span id="auu-' + user.id +'">' + 
+                            '<div>Looking at <span id="auu-' + user.id +'">' +
                             url + '</span></div>' +
                             '<div>Updated <span id="lu-' + user.id + '">' +
                             user.last_update + '</span>' +

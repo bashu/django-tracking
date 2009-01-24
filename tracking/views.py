@@ -37,6 +37,8 @@ def get_active_users(request):
     easier manipulation with JavaScript.
     """
     if request.is_ajax():
+        un = lambda s: unicodedata.normalize('NFKD', unicode(s)).encode('ascii', 'ignore')
+
         active = Visitor.objects.active().reverse()
         now = datetime.now()
 
@@ -44,9 +46,9 @@ def get_active_users(request):
         data = {'users': [{
                 'id': v.id,
                 'user': v.user,
-                'user_agent': v.user_agent,
-                'referrer': v.referrer,
-                'url': v.url,
+                'user_agent': un(v.user_agent),
+                'referrer': un(v.referrer),
+                'url': un(v.url),
                 'page_views': v.page_views,
                 'geoip': v.geoip_data,
                 'last_update': (now - v.last_update).seconds
