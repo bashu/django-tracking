@@ -34,6 +34,7 @@ function createMarkers() {
             var userList = $('#active-users-list');
 
             $.each(json.users, function (i, user) {
+                    var url = '<a href="' + user.url + '">' + user.url + '</a>';
                     if (!markerList[user.id] && user.geoip) {
                         // determine which flag to use
                         var img = '<img src="/static/images/flags/' +
@@ -46,8 +47,8 @@ function createMarkers() {
                             user.geoip.city + '</h3><div>' + img +
                             user.geoip.region_name + ', ' +
                             user.geoip.country_name + '</div>' +
-                            '<div>Looking at <a href="' + user.url + '">' +
-                            user.url + '</a></div>' +
+                            '<div>Looking at <span id="auu-' + user.id +'">' + 
+                            url + '</span></div>' +
                             '<div>Updated <span id="lu-' + user.id + '">' +
                             user.last_update + '</span>' +
                             ' seconds ago</div>';
@@ -58,9 +59,10 @@ function createMarkers() {
                                                 user.geoip.longitude);
 
                         AUmap.addOverlay(createMarker(point, user, img));
+                    } else {
+                        $('#auu-' + user.id).html(url);
+                        $('#lu-' + user.id).html(user.last_update);
                     }
-
-                    $('#lu-' + user.id).html(user.last_update);
                 });
 
             // Clean up old markers
@@ -76,6 +78,7 @@ function createMarkers() {
                         if (!inList) {
                             AUmap.removeOverlay(marker);
                             $('#au-' + i).remove();
+                            markerList[i] = null;
                         }
                     }
                 });
