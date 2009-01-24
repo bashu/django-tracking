@@ -19,9 +19,10 @@ $(document).ready(function () {
         // refresh the markers every 5 seconds or so
         setInterval('createMarkers()', 5000);
 
-        $('.active-user').live('click', function () {
-                var num = parseInt($(this).attr('id').replace('au', ''));
-                marker = markerList[num];
+        $('.active-user h3').live('click', function () {
+                var p = $(this).parent().get(0);
+                var num = parseInt(p.id.replace('au-', ''));
+                var marker = markerList[num];
 
                 AUmap.openInfoWindowHtml(marker.getLatLng(), blurbs[num]);
                 AUmap.panTo(marker.getLatLng());
@@ -43,7 +44,7 @@ function createMarkers() {
 
             $.each(json.users, function (i, user) {
                     var url = '<a href="' + user.url + '">' + user.url + '</a>';
-                    if (!markerList[user.id] && user.geoip && user.geoip.city) {
+                    if (!markerList[user.id] && user.geoip && user.geoip.city && user.geoip.city != 'None') {
                         // determine which flag to use
                         var img = '<img src="/static/images/flags/' +
                                 user.geoip.country_code.toLowerCase() +
@@ -57,9 +58,10 @@ function createMarkers() {
                             user.geoip.country_name + '</div>' +
                             '<div>Looking at <span id="auu-' + user.id +'">' +
                             url + '</span></div>' +
+                            '<div>Using ' + user.user_agent + '</div>' +
                             '<div>Updated <span id="lu-' + user.id + '">' +
                             user.last_update + '</span>' +
-                            ' seconds ago</div>';
+                            ' seconds ago</div></div>';
                         userList.prepend(listHtml);
 
                         // add a marker to the map

@@ -3,9 +3,8 @@ from django.http import Http404, HttpResponse
 from django.template import RequestContext, Context, loader
 from django.shortcuts import render_to_response
 from django.conf import settings
-from tracking.models import Visitor
+from tracking.models import Visitor, u_clean as uc
 from datetime import datetime
-import unicodedata
 
 def update_active_users(request):
     """
@@ -38,22 +37,21 @@ def get_active_users(request):
     easier manipulation with JavaScript.
     """
     if request.is_ajax():
-        un = lambda s: unicodedata.normalize('NFKD', unicode(s)).encode('ascii', 'ignore')
-
         active = Visitor.objects.active().reverse()
         now = datetime.now()
 
         # we don't put the session key or IP address here for security reasons
         data = {'users': [{
                 'id': v.id,
-                'user': v.user,
-                'user_agent': un(v.user_agent),
-                'referrer': un(v.referrer),
-                'url': un(v.url),
+                'user': uc(v.user),
+                'user_agent': uc(v.user_agent),
+                'referrer': uc(v.referrer),
+                'url': uc(v.url),
                 'page_views': v.page_views,
-                'geoip': v.geoip_data,
+                'geoip': v.geoip_data_json,
                 'last_update': (now - v.last_update).seconds
             } for v in active]}
+        print data
 
         return HttpResponse(content=JSONEncoder().encode(data),
                             mimetype='text/javascript')

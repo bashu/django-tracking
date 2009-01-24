@@ -4,11 +4,15 @@ from django.conf import settings
 from tracking import utils
 from datetime import datetime, timedelta
 import os
+import unicodedata
 
 try:
     import GeoIP
 except ImportError:
     GeoIP = None
+
+def u_clean(s):
+    return unicodedata.normalize('NFKD', unicode(s)).encode('ascii', 'ignore')
 
 class VisitorManager(models.Manager):
     def active(self, timeout=None):
@@ -76,6 +80,18 @@ class Visitor(models.Model):
                 pass
         return None
     geoip_data = property(_get_geoip_data)
+
+    def _get_geoip_data_json(self):
+        """
+        Cleans out any dirty unicode characters to make the geoip data safe for
+        JSON encoding.
+        """
+        clean = {}
+        for key,value in self.geoip_data.items():
+            print 'Cleaning: %s :: %s' % (key, value)
+            clean[key] = u_clean(value)
+        return clean
+    geoip_data_json = property(_get_geoip_data_json)
 
     class Meta:
         ordering = ('-last_update',)
