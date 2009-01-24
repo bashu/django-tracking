@@ -36,24 +36,24 @@ def get_active_users(request):
     Retrieves a list of active users which is returned as plain JSON for
     easier manipulation with JavaScript.
     """
-    #if request.is_ajax():
-    active = Visitor.objects.active()
-    now = datetime.now()
+    if request.is_ajax():
+        active = Visitor.objects.active()
+        now = datetime.now()
 
-    # we don't put the session key or IP address here for security reasons
-    data = {'users': [{
-            'id': v.id,
-            'user': v.user,
-            'user_agent': v.user_agent,
-            'referrer': v.referrer,
-            'url': v.url,
-            'page_views': v.page_views,
-            'geoip': v.geoip_data,
-            'last_update': (now - v.last_update).seconds
-        } for v in active]}
+        # we don't put the session key or IP address here for security reasons
+        data = {'users': [{
+                'id': v.id,
+                'user': v.user,
+                'user_agent': v.user_agent,
+                'referrer': v.referrer,
+                'url': v.url,
+                'page_views': v.page_views,
+                'geoip': v.geoip_data,
+                'last_update': (now - v.last_update).seconds
+            } for v in active]}
 
-    return HttpResponse(content=JSONEncoder().encode(data),
-                        mimetype='text/javascript')
+        return HttpResponse(content=JSONEncoder().encode(data),
+                            mimetype='text/javascript')
 
     # if the request was not made via AJAX, raise a 404
     raise Http404
