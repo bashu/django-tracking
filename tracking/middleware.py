@@ -27,13 +27,18 @@ class VisitorTrackingMiddleware:
 
     def process_request(self, request):
         # don't process AJAX requests
-        if request.is_ajax():
-            return
+        if request.is_ajax(): return
 
         # create some useful variables
-        session_key = request.session.session_key
-        ip_address = request.META.get('REMOTE_ADDR', '')
+        ip_address = utils.get_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+        if hasattr(request, 'session'):
+            # use the current session key if we can
+            session_key = request.session.session_key
+        else:
+            # otherwise just fake a session key
+            session_key = '%s:%s' % (ip_address, user_agent)
 
         # see if the user agent is not supposed to be tracked
         for ua in UntrackedUserAgent.objects.all():
@@ -43,71 +48,70 @@ class VisitorTrackingMiddleware:
 
         prefixes = utils.get_untracked_prefixes()
 
-        # don't track media files
+        # don't track media file requests
         if settings.MEDIA_URL:
             prefixes.append(settings.MEDIA_URL)
         if settings.ADMIN_MEDIA_PREFIX:
             prefixes.append(settings.ADMIN_MEDIA_PREFIX)
 
+        # finally, don't track requests to the tracker update pages
+        prefixes.append(reverse('tracking-refresh-active-users'))
+
         # ensure that the request.path does not begin with any of the prefixes
-        validURL = True
         for prefix in prefixes:
             if request.path.startswith(prefix):
-                validURL = False
-                break
+                return
 
-        # if the URL needs to be tracked, track it!
-        if validURL:
-            # determine what time it is
-            now = datetime.now()
+        # if we get here, the URL needs to be tracked
+        # determine what time it is
+        now = datetime.now()
 
-            attrs = {
-                        'session_key': session_key,
-                        'ip_address': ip_address
-                    }
+        attrs = {
+                    'session_key': session_key,
+                    'ip_address': ip_address
+                }
 
-            # for some reason, Visitor.objects.get_or_create was not working here
+        # for some reason, Visitor.objects.get_or_create was not working here
+        try:
+            visitor = Visitor.objects.get(**attrs)
+        except Visitor.DoesNotExist:
             try:
-                visitor = Visitor.objects.get(**attrs)
+                # see if there's a visitor with the same IP and user agent
+                # within the last 5 minutes
+                cutoff = now - timedelta(minutes=5)
+                visitor = Visitor.objects.get(
+                                ip_address=ip_address,
+                                user_agent=user_agent,
+                                last_update__gte=cutoff
+                            )
+                visitor.session_key = session_key
             except Visitor.DoesNotExist:
-                try:
-                    # see if there's a visitor with the same IP and user agent
-                    # within the last 5 minutes
-                    cutoff = now - timedelta(minutes=5)
-                    visitor = Visitor.objects.get(
-                                    ip_address=ip_address,
-                                    user_agent=user_agent,
-                                    last_update__gte=cutoff
-                                )
-                    visitor.session_key = session_key
-                except Visitor.DoesNotExist:
-                    # it's probably safe to assume that the visitor is brand new
-                    visitor = Visitor(**attrs)
+                # it's probably safe to assume that the visitor is brand new
+                visitor = Visitor(**attrs)
 
-            # determine whether or not the user is logged in
-            user = request.user
-            if isinstance(user, AnonymousUser):
-                user = None
+        # determine whether or not the user is logged in
+        user = request.user
+        if isinstance(user, AnonymousUser):
+            user = None
 
-            # update the tracking information
-            visitor.user = user
-            visitor.user_agent = user_agent
+        # update the tracking information
+        visitor.user = user
+        visitor.user_agent = user_agent
 
-            # if the visitor record is new, or the visitor hasn't been here for
-            # at least an hour, update their referrer URL
-            one_hour_ago = now + timedelta(hours=-1)
-            if not visitor.last_update or \
-                visitor.last_update <= one_hour_ago:
-                visitor.referrer = request.META.get('HTTP_REFERER', 'unknown')
+        # if the visitor record is new, or the visitor hasn't been here for
+        # at least an hour, update their referrer URL
+        one_hour_ago = now - timedelta(hours=1)
+        if not visitor.last_update or visitor.last_update <= one_hour_ago:
+            visitor.referrer = request.META.get('HTTP_REFERER', 'unknown')
 
-                # reset the number of pages they've been to
-                visitor.page_views = 0
-                visitor.session_start = now
+            # reset the number of pages they've been to
+            visitor.page_views = 0
+            visitor.session_start = now
 
-            visitor.url = request.path
-            visitor.page_views += 1
-            visitor.last_update = now
-            visitor.save()
+        visitor.url = request.path
+        visitor.page_views += 1
+        visitor.last_update = now
+        visitor.save()
 
 class VisitorCleanUpMiddleware:
     """
@@ -130,7 +134,7 @@ class BannedIPMiddleware:
         ips = [b.ip_address for b in BannedIP.objects.all()]
 
         # check to see if the current user's IP address is in that list
-        if request.META.get('REMOTE_ADDR', '') in ips:
+        if utils.get_ip(request) in ips:
             raise Http404
 
 class GoogleAnalyticsMiddleware:

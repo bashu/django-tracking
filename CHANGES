@@ -1,0 +1,10 @@
+=======================
+django-tracking changes
+=======================
+
+0.2.5
+-----
+
+- Did some code optimization
+- Added the ability to have a dynamically updating Google Map to show where your
+  visitors are coming from

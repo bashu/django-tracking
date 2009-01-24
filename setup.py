@@ -3,6 +3,7 @@
 
 from distutils.core import setup
 import sys, os
+import tracking
 
 def fullsplit(path, result=None):
     """
@@ -36,7 +37,7 @@ for path, dirs, files in os.walk(tracking_dir):
 
 setup(
     name='django-tracking',
-    version='0.1',
+    version=tracking.get_version(),
     url='http://code.google.com/p/django-tracking/',
     author='Josh VanderLinden',
     author_email='codekoala@gmail.com',

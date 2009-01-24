@@ -1,2 +1,2 @@
-include README tracking/templates/tracking/_active_users.html tracking/templates/tracking/json.html tracking/templates/tracking/refresh_active_users.js
-recursive-include tracking/*
+include README LICENSE AUTHORS CHANGES tracking/templates/* tracking/media/*
+recursive-include tracking *.py *.html *.js

@@ -17,14 +17,27 @@ django-tracking is a simple attempt at keeping track of visitors to Django-power
   * Template tags to:
     * display how many active users there are on your site
     * determine how many active users are on the same page within your site
+  * Optional "Active Visitors Map" to see where visitors are in the world
 
 ==Requirements==
 
 As far as I am aware, the only requirement for django-tracking to work is a modern version of Django.  I developed the project on Django 1.0 alpha 2 and beta 1 (currently on revision 8375).  It is designed to work with the newforms-admin functionality.
 
+If you wish to use a Google Map to display where your visitors are probably at, you must have a Google Maps API key, which is free (http://code.google.com/intl/ro/apis/maps/signup.html).  Along with that, you must have the GeoIP C API installed (http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz) and the GeoIP Python API (http://geolite.maxmind.com/download/geoip/api/python/GeoIP-Python-1.2.4.tar.gz).  Finally, you might want to grab the GeoLite City binary unless you are a paying MaxMind customer.  Configuring this feature is discussed later.
+
 ==Installation==
 
 Download `django-tracking` using *one* of the following methods:
+
+===easy_install===
+
+You can download the package from the [http://pypi.python.org/pypi/django-tracking/ CheeseShop] or use
+
+{{{
+easy_install django-tracking
+}}}
+
+to download and install `django-tracking`.
 
 ===Checkout from Subversion===
 
@@ -74,6 +87,28 @@ Add `tracking.middleware.BannedIPMiddleware` to your `MIDDLEWARE_CLASSES` in `se
 ===Visitors on Page (template tag)===
 
 Make sure that `django.core.context_processors.request` is somewhere in your `TEMPLATE_CONTEXT_PROCESSORS` tuple.  This context processor makes the `request` object accessible to your templates.  This application uses the `request` object to determine what page the user is looking at in a template tag.
+
+==Active Visitors Map==
+
+If you're interested in seeing where your visitors are at a given point in time, you might enjoy the active visitor map feature.  Be sure you have added a line to your main URLconf, as follows:
+
+{{{
+from django.conf.urls.defaults import *
+
+urlpatterns = patterns('',
+    ....
+    (r'^tracking/', include('tracking.urls')),
+    ....
+)
+}}}
+
+Next, set a couple of settings in your `settings.py`:
+
+ * `GOOGLE_MAPS_KEY`: Your very own Google Maps API key
+ * `TRACKING_USE_GEOIP`: set this to `True` if you want to see markers on the map
+ * `GEOIP_DATA_FILE`: set this to the absolute path on the filesystem of your `GeoIP.dat` or `GeoIPCity.dat` or whatever file.  It's usually something like `/usr/local/share/GeoIP.dat` or `/usr/share/GeoIP/GeoIP.dat`.  You can try leaving this blank if you want; the code will look in the default location if possible.
+
+When that's done, you should be able to go to `/tracking/map/` on your site (replacing `tracking` with whatever prefix you chose to use in your URLconf, obviously).  The default template relies upon jQuery for its awesomeness, but you're free to use whatever you would like.
 
 ==Usage==
 

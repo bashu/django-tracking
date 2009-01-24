@@ -7,7 +7,7 @@ class VisitorsOnSite(template.Node):
     """
     Injects the number of active users on your site as an integer into the context
     """
-    def __init__(self, varname, same_page=None):
+    def __init__(self, varname, same_page=False):
         self.varname = varname
         self.same_page = same_page
 
