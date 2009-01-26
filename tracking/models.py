@@ -12,7 +12,24 @@ except ImportError:
     GeoIP = None
 
 def u_clean(s):
-    return unicodedata.normalize('NFKD', unicode(s)).encode('ascii', 'ignore')
+    uni = ''
+    try:
+        # try this first
+        uni = str(s).decode('iso-8859-1')
+    except UnicodeDecodeError:
+        try:
+            # try utf-8 next
+            uni = str(s).decode('utf-8')
+        except UnicodeDecodeError:
+            # last resort method... one character at a time
+            if s and type(s) in (str, unicode):
+                for c in s:
+                    try:
+                        uni += unicodedata.normalize('NFKC', unicode(c))
+                    except UnicodeDecodeError:
+                        uni += '-'
+
+    return uni.encode('ascii', 'xmlcharrefreplace')
 
 class VisitorManager(models.Manager):
     def active(self, timeout=None):
@@ -87,8 +104,10 @@ class Visitor(models.Model):
         JSON encoding.
         """
         clean = {}
+        if not self.geoip_data: return {}
+
         for key,value in self.geoip_data.items():
-            print 'Cleaning: %s :: %s' % (key, value)
+            #print 'Cleaning: %s :: %s' % (key, value)
             clean[key] = u_clean(value)
         return clean
     geoip_data_json = property(_get_geoip_data_json)

@@ -43,7 +43,7 @@ def get_active_users(request):
         # we don't put the session key or IP address here for security reasons
         data = {'users': [{
                 'id': v.id,
-                'user': uc(v.user),
+                #'user': uc(v.user),
                 'user_agent': uc(v.user_agent),
                 'referrer': uc(v.referrer),
                 'url': uc(v.url),
@@ -51,7 +51,7 @@ def get_active_users(request):
                 'geoip': v.geoip_data_json,
                 'last_update': (now - v.last_update).seconds
             } for v in active]}
-        print data
+        #print data
 
         return HttpResponse(content=JSONEncoder().encode(data),
                             mimetype='text/javascript')
