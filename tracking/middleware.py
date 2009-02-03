@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, NoReverseMatch
 from django.http import Http404
 from django.shortcuts import render_to_response
 from django.conf import settings
@@ -54,8 +54,12 @@ class VisitorTrackingMiddleware:
         if settings.ADMIN_MEDIA_PREFIX:
             prefixes.append(settings.ADMIN_MEDIA_PREFIX)
 
-        # finally, don't track requests to the tracker update pages
-        prefixes.append(reverse('tracking-refresh-active-users'))
+        try:
+            # finally, don't track requests to the tracker update pages
+            prefixes.append(reverse('tracking-refresh-active-users'))
+        except NoReverseMatch:
+            # django-tracking hasn't been included in the URLconf if we get here
+            pass
 
         # ensure that the request.path does not begin with any of the prefixes
         for prefix in prefixes:
