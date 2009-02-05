@@ -83,7 +83,7 @@ function createMarkers() {
 
                         // Send recently-active users to the top of the list
                         if (user.last_update <= 10) {
-                            $('#au-' + i).prependTo(userList);
+                            $('#au-' + user.id).prependTo(userList);
                         }
                     }
                 });
