@@ -50,6 +50,13 @@ function createMarkers() {
                                 user.geoip.country_code.toLowerCase() +
                                 '.png" class="flag" />';
 
+                        if (user.referrer == 'unknown') {
+                            var ref = 'unknown';
+                        } else {
+                            var ref = '<a href="' + user.referrer + '">' +
+                            user.referrer + '</a>';
+                        }
+
                         // come up with some HTML to put in the list
                         var listHtml = '<div id="au-' + user.id + '" ' +
                             'class="active-user location-info"><h3>' +
@@ -59,8 +66,7 @@ function createMarkers() {
                             '<div><strong>Viewing</strong> <span id="auu-' + user.id +'">' +
                             url + '</span></div>' +
                             '<div><strong>Using</strong> ' + user.user_agent + '</div>' +
-                            '<div><strong>From</strong> <a href="' + user.referrer + '">' +
-                            user.referrer + '</a></div>' +
+                            '<div><strong>From</strong> ' + ref + '</div>' +
                             '<div><strong>Updated</strong> <span id="lu-' + user.id + '">' +
                             user.last_update + '</span>' +
                             ' seconds ago</div></div>';
@@ -74,6 +80,11 @@ function createMarkers() {
                     } else {
                         $('#auu-' + user.id).html(url);
                         $('#lu-' + user.id).html(user.last_update);
+
+                        // Send recently-active users to the top of the list
+                        if (user.last_update <= 10) {
+                            $('#au-' + i).prependTo(userList);
+                        }
                     }
                 });
 
