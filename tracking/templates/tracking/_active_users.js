@@ -50,11 +50,10 @@ function createMarkers() {
                                 user.geoip.country_code.toLowerCase() +
                                 '.png" class="flag" />';
 
-                        if (user.referrer == 'unknown') {
-                            var ref = 'unknown';
-                        } else {
-                            var ref = '<a href="' + user.referrer + '">' +
-                            user.referrer + '</a>';
+                        var ref = '';
+                        if (user.referrer != 'unknown') {
+                            ref = '<div><strong>From</strong> <a href="' + user.referrer +
+                                    '">' + user.referrer + '</a></div>';
                         }
 
                         // come up with some HTML to put in the list
@@ -65,11 +64,11 @@ function createMarkers() {
                             user.geoip.country_name + '</div>' +
                             '<div><strong>Viewing</strong> <span id="auu-' + user.id +'">' +
                             url + '</span></div>' +
-                            '<div><strong>Using</strong> ' + user.user_agent + '</div>' +
-                            '<div><strong>From</strong> ' + ref + '</div>' +
+                            '<div><strong>Using</strong> ' + user.user_agent + '</div>' + ref +
+                            '<div><strong>Has viewed</strong> <span id="pv-' + user.id +
+                            '">' + user.page_views + '</span> pages</div>' +
                             '<div><strong>Updated</strong> <span id="lu-' + user.id + '">' +
-                            user.last_update + '</span>' +
-                            ' seconds ago</div></div>';
+                            user.friendly_time + '</span> ago</div></div>';
                         userList.prepend(listHtml);
 
                         // add a marker to the map
@@ -79,7 +78,8 @@ function createMarkers() {
                         AUmap.addOverlay(createMarker(point, user, img));
                     } else {
                         $('#auu-' + user.id).html(url);
-                        $('#lu-' + user.id).html(user.last_update);
+                        $('#lu-' + user.id).html(user.friendly_time);
+                        $('#pv-' + user.id).html(user.page_views);
 
                         // Send recently-active users to the top of the list
                         if (user.last_update <= 10) {

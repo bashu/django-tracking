@@ -49,7 +49,8 @@ def get_active_users(request):
                 'url': uc(v.url),
                 'page_views': v.page_views,
                 'geoip': v.geoip_data_json,
-                'last_update': (now - v.last_update).seconds
+                'last_update': (now - v.last_update).seconds,
+                'friendly_time': ', '.join(friendly_time((now - v.last_update).seconds)),
             } for v in active]}
         #print data
 
@@ -58,6 +59,20 @@ def get_active_users(request):
 
     # if the request was not made via AJAX, raise a 404
     raise Http404
+
+def friendly_time(last_update):
+    minutes = last_update / 60
+    seconds = last_update % 60
+
+    friendly_time = []
+    if minutes > 0:
+        msuff = ('s' if minutes != 1 else '')
+        friendly_time.append('%i minute%s' % (minutes, msuff))
+    if seconds > 0:
+        ssuff = ('s' if seconds != 1 else '')
+        friendly_time.append('%i second%s' % (seconds, ssuff))
+
+    return friendly_time
 
 def display_map(request):
     """
