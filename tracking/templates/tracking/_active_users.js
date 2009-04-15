@@ -66,7 +66,7 @@ function createMarkers() {
                             url + '</span></div>' +
                             '<div><strong>Using</strong> ' + user.user_agent + '</div>' + ref +
                             '<div><strong>Has viewed</strong> <span id="pv-' + user.id +
-                            '">' + user.page_views + '</span> pages</div>' +
+                            '">' + user.page_views + '</span> page(s)</div>' +
                             '<div><strong>Updated</strong> <span id="lu-' + user.id + '">' +
                             user.friendly_time + '</span> ago</div></div>';
                         userList.prepend(listHtml);

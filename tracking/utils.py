@@ -20,7 +20,13 @@ def get_ip(request):
     if ip_address:
         # make sure we have one and only one IP
         try:
-            ip_address = IP_RE.match(ip_address).group(0)
+            ip_address = IP_RE.match(ip_address)
+            if ip_address:
+                ip_address = ip_address.group(0)
+            else:
+                # no IP, probably from some dirty proxy or other device
+                # throw in some bogus IP
+                ip_address = '10.0.0.1'
         except IndexError:
             pass
 

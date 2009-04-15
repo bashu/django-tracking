@@ -31,7 +31,13 @@ class VisitorTrackingMiddleware:
 
         # create some useful variables
         ip_address = utils.get_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
+
+        # see if the user agent is not supposed to be tracked
+        for ua in UntrackedUserAgent.objects.all():
+            # if the keyword is found in the user agent, stop tracking
+            if str(user_agent).find(ua.keyword) != -1:
+                return
 
         if hasattr(request, 'session'):
             # use the current session key if we can
@@ -39,12 +45,6 @@ class VisitorTrackingMiddleware:
         else:
             # otherwise just fake a session key
             session_key = '%s:%s' % (ip_address, user_agent)
-
-        # see if the user agent is not supposed to be tracked
-        for ua in UntrackedUserAgent.objects.all():
-            # if the keyword is found in the user agent, stop tracking
-            if str(user_agent).find(ua.keyword) != -1:
-                return
 
         prefixes = utils.get_untracked_prefixes()
 
@@ -79,19 +79,26 @@ class VisitorTrackingMiddleware:
         try:
             visitor = Visitor.objects.get(**attrs)
         except Visitor.DoesNotExist:
+            # see if there's a visitor with the same IP and user agent
+            # within the last 5 minutes
+            cutoff = now - timedelta(minutes=5)
+            filter_params = {
+                    'ip_address': ip_address,
+                    'user_agent': user_agent,
+                    'last_update__gte': cutoff
+                }
             try:
-                # see if there's a visitor with the same IP and user agent
-                # within the last 5 minutes
-                cutoff = now - timedelta(minutes=5)
-                visitor = Visitor.objects.get(
-                                ip_address=ip_address,
-                                user_agent=user_agent,
-                                last_update__gte=cutoff
-                            )
+                visitor = Visitor.objects.get(**filter_params)
+                visitor.session_key = session_key
+            except Visitor.MultipleObjectsReturned:
+                # just get the first match
+                visitor = Visitor.objects.filter(**filter_params)[0]
                 visitor.session_key = session_key
             except Visitor.DoesNotExist:
                 # it's probably safe to assume that the visitor is brand new
                 visitor = Visitor(**attrs)
+        except:
+            return
 
         # determine whether or not the user is logged in
         user = request.user
@@ -106,7 +113,7 @@ class VisitorTrackingMiddleware:
         # at least an hour, update their referrer URL
         one_hour_ago = now - timedelta(hours=1)
         if not visitor.last_update or visitor.last_update <= one_hour_ago:
-            visitor.referrer = request.META.get('HTTP_REFERER', 'unknown')
+            visitor.referrer = request.META.get('HTTP_REFERER', 'unknown')[:255]
 
             # reset the number of pages they've been to
             visitor.page_views = 0
