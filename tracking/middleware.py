@@ -142,7 +142,11 @@ class BannedIPMiddleware:
     """
     def process_request(self, request):
         # compile a list of all banned IP addresses
-        ips = [b.ip_address for b in BannedIP.objects.all()]
+        try:
+            ips = [b.ip_address for b in BannedIP.objects.all()]
+        except:
+            # in case we don't have the database setup yet
+            ips = []
 
         # check to see if the current user's IP address is in that list
         if utils.get_ip(request) in ips:

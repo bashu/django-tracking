@@ -39,54 +39,55 @@ function createMarkers() {
         url : '{% url tracking-get-active-users %}',
         type : 'POST',
         dataType : 'json',
+        data: {},
         success : function (json) {
             var userList = $('#active-users-list');
 
             $.each(json.users, function (i, user) {
-                    var url = '<a href="' + user.url + '">' + user.url + '</a>';
-                    if (!markerList[user.id] && user.geoip && user.geoip.city && user.geoip.city != 'None') {
-                        // determine which flag to use
-                        var img = '<img src="/static/images/flags/' +
-                                user.geoip.country_code.toLowerCase() +
-                                '.png" class="flag" />';
+                var url = '<a href="' + user.url + '">' + user.url + '</a>';
+                if (!markerList[user.id] && user.geoip && user.geoip.city && user.geoip.city != 'None') {
+                    // determine which flag to use
+                    var img = '<img src="/static/images/flags/' +
+                            user.geoip.country_code.toLowerCase() +
+                            '.png" class="flag" />';
 
-                        var ref = '';
-                        if (user.referrer != 'unknown') {
-                            ref = '<div><strong>From</strong> <a href="' + user.referrer +
-                                    '">' + user.referrer + '</a></div>';
-                        }
-
-                        // come up with some HTML to put in the list
-                        var listHtml = '<div id="au-' + user.id + '" ' +
-                            'class="active-user location-info"><h3>' +
-                            user.geoip.city + '</h3><div>' + img +
-                            user.geoip.region_name + ', ' +
-                            user.geoip.country_name + '</div>' +
-                            '<div><strong>Viewing</strong> <span id="auu-' + user.id +'">' +
-                            url + '</span></div>' +
-                            '<div><strong>Using</strong> ' + user.user_agent + '</div>' + ref +
-                            '<div><strong>Has viewed</strong> <span id="pv-' + user.id +
-                            '">' + user.page_views + '</span> page(s)</div>' +
-                            '<div><strong>Updated</strong> <span id="lu-' + user.id + '">' +
-                            user.friendly_time + '</span> ago</div></div>';
-                        userList.prepend(listHtml);
-
-                        // add a marker to the map
-                        var point = new GLatLng(user.geoip.latitude,
-                                                user.geoip.longitude);
-
-                        AUmap.addOverlay(createMarker(point, user, img));
-                    } else {
-                        $('#auu-' + user.id).html(url);
-                        $('#lu-' + user.id).html(user.friendly_time);
-                        $('#pv-' + user.id).html(user.page_views);
-
-                        // Send recently-active users to the top of the list
-                        if (user.last_update <= 10) {
-                            $('#au-' + user.id).prependTo(userList);
-                        }
+                    var ref = '';
+                    if (user.referrer != 'unknown') {
+                        ref = '<div><strong>From</strong> <a href="' + user.referrer +
+                                '">' + user.referrer + '</a></div>';
                     }
-                });
+
+                    // come up with some HTML to put in the list
+                    var listHtml = '<div id="au-' + user.id + '" ' +
+                        'class="active-user location-info"><h3>' +
+                        user.geoip.city + '</h3><div>' + img +
+                        user.geoip.region_name + ', ' +
+                        user.geoip.country_name + '</div>' +
+                        '<div><strong>Viewing</strong> <span id="auu-' + user.id +'">' +
+                        url + '</span></div>' +
+                        '<div><strong>Using</strong> ' + user.user_agent + '</div>' + ref +
+                        '<div><strong>Has viewed</strong> <span id="pv-' + user.id +
+                        '">' + user.page_views + '</span> page(s)</div>' +
+                        '<div><strong>Updated</strong> <span id="lu-' + user.id + '">' +
+                        user.friendly_time + '</span> ago</div></div>';
+                    userList.prepend(listHtml);
+
+                    // add a marker to the map
+                    var point = new GLatLng(user.geoip.latitude,
+                                            user.geoip.longitude);
+
+                    AUmap.addOverlay(createMarker(point, user, img));
+                } else {
+                    $('#auu-' + user.id).html(url);
+                    $('#lu-' + user.id).html(user.friendly_time);
+                    $('#pv-' + user.id).html(user.page_views);
+
+                    // Send recently-active users to the top of the list
+                    if (user.last_update <= 10) {
+                        $('#au-' + user.id).prependTo(userList);
+                    }
+                }
+            });
 
             // Clean up old markers
             $.each(markerList, function (i, marker) {

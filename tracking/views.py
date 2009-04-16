@@ -54,8 +54,11 @@ def get_active_users(request):
             } for v in active]}
         #print data
 
-        return HttpResponse(content=JSONEncoder().encode(data),
-                            mimetype='text/javascript')
+        response = HttpResponse(content=JSONEncoder().encode(data),
+                                mimetype='text/javascript')
+        response['Content-Length'] = len(response.content)
+
+        return response
 
     # if the request was not made via AJAX, raise a 404
     raise Http404
