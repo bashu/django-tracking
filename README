@@ -21,13 +21,23 @@ django-tracking is a simple attempt at keeping track of visitors to Django-power
 
 ==Requirements==
 
-As far as I am aware, the only requirement for django-tracking to work is a modern version of Django.  I developed the project on Django 1.0 alpha 2 and beta 1 (currently on revision 8375).  It is designed to work with the newforms-admin functionality.
+As far as I am aware, the only requirement for django-tracking to work is a modern version of Django.  I developed the project on Django 1.0 alpha 2 and beta 1.  It is designed to work with the newforms-admin functionality.
 
 If you wish to use a Google Map to display where your visitors are probably at, you must have a Google Maps API key, which is free (http://code.google.com/intl/ro/apis/maps/signup.html).  Along with that, you must have the GeoIP C API installed (http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz) and the GeoIP Python API (http://geolite.maxmind.com/download/geoip/api/python/GeoIP-Python-1.2.4.tar.gz).  Finally, you might want to grab the GeoLite City binary unless you are a paying MaxMind customer.  Configuring this feature is discussed later.
 
 ==Installation==
 
 Download `django-tracking` using *one* of the following methods:
+
+===pip===
+
+You can download the package from the [http://pypi.python.org/pypi/django-tracking/ CheeseShop] or use
+
+{{{
+pip install django-tracking
+}}}
+
+to download and install `django-tracking`.
 
 ===easy_install===
 
@@ -74,7 +84,8 @@ Depending on how you wish to use this application, you have a few options:
 
 ===Visitor Tracking===
 
-Add `tracking.middleware.VisitorTrackingMiddleware` to your `MIDDLEWARE_CLASSES` in `settings.py`.
+Add `tracking.middleware.VisitorTrackingMiddleware` to your `MIDDLEWARE_CLASSES` in `settings.py`.  It must be
+underneath the `AuthenticationMiddleware`, so that `request.user` exists.
 
 ====Automatic Visitor Clean-Up====
 
