@@ -1,4 +1,5 @@
 from django.utils.simplejson.encoder import JSONEncoder
+from django.views.decorators.cache import never_cache
 from django.http import Http404, HttpResponse
 from django.template import RequestContext, Context, loader
 from django.shortcuts import render_to_response
@@ -34,6 +35,7 @@ def update_active_users(request):
     # if the request was not made via AJAX, raise a 404
     raise Http404
 
+@never_cache
 def get_active_users(request):
     """
     Retrieves a list of active users which is returned as plain JSON for
