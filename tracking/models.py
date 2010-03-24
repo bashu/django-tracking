@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils.translation import ugettext, ugettext_lazy as _
 from tracking import utils
 from datetime import datetime, timedelta
 import os
@@ -73,7 +74,7 @@ class Visitor(models.Model):
 
             return u'%i:%02i:%02i' % (hours, minutes, seconds)
         else:
-            return u'unknown'
+            return ugettext(u'unknown')
     time_on_site = property(_time_on_site)
 
     def _get_geoip_data(self):
@@ -117,23 +118,23 @@ class Visitor(models.Model):
         unique_together = ('session_key', 'ip_address',)
 
 class UntrackedUserAgent(models.Model):
-    keyword = models.CharField(max_length=100, help_text='Part or all of a user-agent string.  For example, "Googlebot" here will be found in "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" and that visitor will not be tracked.')
+    keyword = models.CharField(_('keyword'), max_length=100, help_text=_('Part or all of a user-agent string.  For example, "Googlebot" here will be found in "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" and that visitor will not be tracked.'))
 
     def __unicode__(self):
         return self.keyword
 
     class Meta:
         ordering = ('keyword',)
-        verbose_name = 'Untracked User-Agent'
-        verbose_name_plural = 'Untracked User-Agents'
+        verbose_name = _('Untracked User-Agent')
+        verbose_name_plural = _('Untracked User-Agents')
 
 class BannedIP(models.Model):
-    ip_address = models.IPAddressField('IP Address', help_text='The IP address that should be banned')
+    ip_address = models.IPAddressField('IP Address', help_text=_('The IP address that should be banned'))
 
     def __unicode__(self):
         return self.ip_address
 
     class Meta:
         ordering = ('ip_address',)
-        verbose_name = 'Banned IP'
-        verbose_name_plural = 'Banned IPs'
+        verbose_name = _('Banned IP')
+        verbose_name_plural = _('Banned IPs')

@@ -1,3 +1,4 @@
 include README LICENSE AUTHORS CHANGES
 recursive-include tracking/templates *.html *.js
 recursive-include tracking/media/tracking/* *.zip *.js
+recursive-include tracking/locale/*/LC_MESSAGES *.po *.mo

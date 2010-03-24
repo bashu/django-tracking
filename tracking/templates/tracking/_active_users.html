@@ -1,8 +1,8 @@
-<div class="total">
-    {{ active.count }} active user{{ active.count|pluralize }}
+{% load i18n %}<div class="total">
+    {% blocktrans count active.count as counter %}1 active user{% plural %}{{ counter }} active users{% endblocktrans %}
 </div>
 <div class="guests">
-    {{ guests.count }} guest{{ guests.count|pluralize }}
+    {% blocktrans count guests.count as counter %}1 guest user{% plural %}{{ counter }} guest users{% endblocktrans %}
     {% if user.is_superuser %}
     {% for visitor in guests %}
     {% if forloop.first %}<ul class="active-guests">{% endif %}
@@ -12,7 +12,7 @@
     {% endif %}
 </div>
 <div class="registered">
-    {{ registered.count }} registered user{{ registered.count|pluralize }}
+    {% blocktrans count registered.count as counter %}1 registered user{% plural %}{{ counter }} registered users{% endblocktrans %}
     {% for visitor in registered %}
     {% if forloop.first %}<ul class="active-users">{% endif %}
         <li>{{ visitor.user }}</li>

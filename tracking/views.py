@@ -4,6 +4,7 @@ from django.http import Http404, HttpResponse
 from django.template import RequestContext, Context, loader
 from django.shortcuts import render_to_response
 from django.conf import settings
+from django.utils.translation import ungettext
 from tracking.models import Visitor, u_clean as uc
 from datetime import datetime
 
@@ -74,11 +75,17 @@ def friendly_time(last_update):
 
     friendly_time = []
     if minutes > 0:
-        msuff = ('s' if minutes != 1 else '')
-        friendly_time.append('%i minute%s' % (minutes, msuff))
+        friendly_time.append(ungettext(
+                '%(minutes)i minute',
+                '%(minutes)i minutes',
+                minutes
+        ) % {'minutes': minutes })
     if seconds > 0:
-        ssuff = ('s' if seconds != 1 else '')
-        friendly_time.append('%i second%s' % (seconds, ssuff))
+        friendly_time.append(ungettext(
+                '%(seconds)i second',
+                '%(seconds)i seconds',
+                seconds
+        ) % {'seconds': seconds })
 
     return friendly_time
 
