@@ -1,2 +1,3 @@
-include README LICENSE AUTHORS CHANGES tracking/templates/* tracking/media/*
-recursive-include tracking *.py *.html *.js
+include README LICENSE AUTHORS CHANGES
+recursive-include tracking/templates *.html *.js
+recursive-include tracking/media/tracking/* *.zip *.js
