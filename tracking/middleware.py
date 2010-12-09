@@ -36,7 +36,7 @@ class VisitorTrackingMiddleware:
         # see if the user agent is not supposed to be tracked
         for ua in UntrackedUserAgent.objects.all():
             # if the keyword is found in the user agent, stop tracking
-            if str(user_agent).find(ua.keyword) != -1:
+            if unicode(user_agent).find(ua.keyword) != -1:
                 return
 
         if hasattr(request, 'session'):
@@ -122,7 +122,10 @@ class VisitorTrackingMiddleware:
         visitor.url = request.path
         visitor.page_views += 1
         visitor.last_update = now
-        visitor.save()
+        try:
+            visitor.save()
+        except DatabaseError:
+            pass
 
 class VisitorCleanUpMiddleware:
     """
