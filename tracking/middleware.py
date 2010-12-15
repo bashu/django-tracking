@@ -36,7 +36,7 @@ class VisitorTrackingMiddleware:
         # see if the user agent is not supposed to be tracked
         for ua in UntrackedUserAgent.objects.all():
             # if the keyword is found in the user agent, stop tracking
-            if unicode(user_agent).find(ua.keyword) != -1:
+            if unicode(user_agent, errors='ignore').find(ua.keyword) != -1:
                 return
 
         if hasattr(request, 'session'):
