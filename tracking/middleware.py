@@ -1,4 +1,5 @@
 from django.core.urlresolvers import reverse, NoReverseMatch
+from django.db.utils import DatabaseError
 from django.http import Http404
 from django.shortcuts import render_to_response
 from django.conf import settings
