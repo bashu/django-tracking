@@ -47,11 +47,6 @@ def get_cleanup_timeout():
     """
     return getattr(settings, 'TRACKING_CLEANUP_TIMEOUT', 24)
 
-def get_untracked_prefixes():
-    """Gets a list of prefixes that shouldn't be tracked"""
-
-    return getattr(settings, 'NO_TRACKING_PREFIXES', [])
-
 def u_clean(s):
     """A strange attempt at cleaning up unicode"""
 

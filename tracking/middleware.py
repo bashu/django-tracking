@@ -30,7 +30,7 @@ class VisitorTrackingMiddleware:
 
         # create some useful variables
         ip_address = utils.get_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
+        user_agent = utils.u_clean(request.META.get('HTTP_USER_AGENT', '')[:255])
 
         # see if the user agent is not supposed to be tracked
         for ua in UntrackedUserAgent.objects.all():
@@ -96,7 +96,7 @@ class VisitorTrackingMiddleware:
         # at least an hour, update their referrer URL
         one_hour_ago = now - timedelta(hours=1)
         if not visitor.last_update or visitor.last_update <= one_hour_ago:
-            visitor.referrer = request.META.get('HTTP_REFERER', 'unknown')[:255]
+            visitor.referrer = utils.u_clean(request.META.get('HTTP_REFERER', 'unknown')[:255])
 
             # reset the number of pages they've been to
             visitor.page_views = 0
