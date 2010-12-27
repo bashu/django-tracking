@@ -4,11 +4,12 @@ import time
 import re
 import urllib, urllib2
 
-from django.http import Http404
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
-from tracking.models import Visitor, UntrackedUserAgent, BannedIP
+from django.db.utils import DatabaseError
+from django.http import Http404
 from tracking import utils
+from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 
 title_re = re.compile('<title>(.*?)</title>')
 
@@ -35,7 +36,7 @@ class VisitorTrackingMiddleware:
         # see if the user agent is not supposed to be tracked
         for ua in UntrackedUserAgent.objects.all():
             # if the keyword is found in the user agent, stop tracking
-            if str(user_agent).find(ua.keyword) != -1:
+            if unicode(user_agent, errors='ignore').find(ua.keyword) != -1:
                 return
 
         if hasattr(request, 'session'):
@@ -105,7 +106,10 @@ class VisitorTrackingMiddleware:
         visitor.url = request.path
         visitor.page_views += 1
         visitor.last_update = now
-        visitor.save()
+        try:
+            visitor.save()
+        except DatabaseError:
+            pass
 
 class VisitorCleanUpMiddleware:
     """
