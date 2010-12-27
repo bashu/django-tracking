@@ -70,30 +70,27 @@ class VisitorTrackingMiddleware:
         now = datetime.now()
 
         attrs = {
-                    'session_key': session_key,
-                    'ip_address': ip_address
-                }
+            'session_key': session_key,
+            'ip_address': ip_address
+        }
 
         # for some reason, Visitor.objects.get_or_create was not working here
         try:
             visitor = Visitor.objects.get(**attrs)
         except Visitor.DoesNotExist:
-            # see if there's a visitor with the same IP and user agent
+            # see if there's a visitor with the same IP and session key
             # within the last 5 minutes
             cutoff = now - timedelta(minutes=5)
-            filter_params = {
-                    'ip_address': ip_address,
-                    'user_agent': user_agent,
-                    'last_update__gte': cutoff
-                }
-            try:
-                visitor = Visitor.objects.get(**filter_params)
+            visitors = Visitor.objects.filter(
+                ip_address=ip_address,
+                user_agent=user_agent,
+                last_update__gte=cutoff
+            )
+
+            if len(visitors):
+                visitor = visitors[0]
                 visitor.session_key = session_key
-            except Visitor.MultipleObjectsReturned:
-                # just get the first match
-                visitor = Visitor.objects.filter(**filter_params)[0]
-                visitor.session_key = session_key
-            except Visitor.DoesNotExist:
+            else:
                 # it's probably safe to assume that the visitor is brand new
                 visitor = Visitor(**attrs)
         except:
