@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse, NoReverseMatch
 
-VERSION = (0, 2, 12)
+VERSION = (0, 3, 0)
 
 def get_version():
     "Returns the version as a human-format string."
