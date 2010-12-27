@@ -1,16 +1,20 @@
-from django.utils.simplejson.encoder import JSONEncoder
-from django.views.decorators.cache import never_cache
-from django.http import Http404, HttpResponse
-from django.template import RequestContext, Context, loader
-from django.shortcuts import render_to_response
+from datetime import datetime
+import logging
+import traceback
+
 from django.conf import settings
+from django.http import Http404, HttpResponse
+from django.shortcuts import render_to_response
+from django.template import RequestContext, Context, loader
+from django.utils.simplejson.encoder import JSONEncoder
 from django.utils.translation import ungettext
+from django.views.decorators.cache import never_cache
 from tracking.models import Visitor
 from tracking.utils import u_clean as uc
-from datetime import datetime
 
 DEFAULT_TRACKING_TEMPLATE = getattr(settings, 'DEFAULT_TRACKING_TEMPLATE',
                                     'tracking/visitor_map.html')
+log = logging.getLogger('tracking.views')
 
 def update_active_users(request):
     """
@@ -48,18 +52,21 @@ def get_active_users(request):
         now = datetime.now()
 
         # we don't put the session key or IP address here for security reasons
-        data = {'users': [{
-                'id': v.id,
-                #'user': uc(v.user),
-                'user_agent': uc(v.user_agent),
-                'referrer': uc(v.referrer),
-                'url': uc(v.url),
-                'page_views': v.page_views,
-                'geoip': v.geoip_data_json,
-                'last_update': (now - v.last_update).seconds,
-                'friendly_time': ', '.join(friendly_time((now - v.last_update).seconds)),
-            } for v in active]}
-        #print data
+        try:
+            data = {'users': [{
+                    'id': v.id,
+                    #'user': uc(v.user),
+                    'user_agent': uc(v.user_agent),
+                    'referrer': uc(v.referrer),
+                    'url': uc(v.url),
+                    'page_views': v.page_views,
+                    'geoip': v.geoip_data_json,
+                    'last_update': (now - v.last_update).seconds,
+                    'friendly_time': ', '.join(friendly_time((now - v.last_update).seconds)),
+                } for v in active]}
+        except:
+            log.error('There was a problem putting all of the visitor data together:\n%s\n\n%s' % (traceback.format_exc(), locals()))
+            return HttpResponse(content='{}', mimetype='text/javascript')
 
         response = HttpResponse(content=JSONEncoder().encode(data),
                                 mimetype='text/javascript')
@@ -96,6 +103,7 @@ def display_map(request, template_name=DEFAULT_TRACKING_TEMPLATE,
     Displays a map of recently active users.  Requires a Google Maps API key
     and GeoIP in order to be most effective.
     """
+
     GOOGLE_MAPS_KEY = getattr(settings, 'GOOGLE_MAPS_KEY', None)
 
     return render_to_response(template_name,

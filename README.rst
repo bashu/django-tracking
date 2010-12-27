@@ -38,10 +38,10 @@ beta 1.  It is designed to work with the newforms-admin functionality.
 
 If you wish to use a Google Map to display where your visitors are probably at,
 you must have a `Google Maps API key
-<http://code.google.com/intl/ro/apis/maps/signup.html>`_, which is free.  In
-the past, you were required to have a couple of GeoIP API libraries.  Since
-version 0.2.11, these dependencies have been replaced with Django's built-in
-GIS utilities.  You might want to grab the `GeoLite City binary
+<http://code.google.com/intl/ro/apis/maps/signup.html>`_, which is free.  You
+are required to have the `GeoIP C API library
+<http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz>`_ installed.
+You might want to grab the `GeoLite City binary
 <http://www.maxmind.com/app/geolitecity>`_ unless you are a paying MaxMind
 customer.  This is the data file that ``django-tracking`` uses to translate an
 IP into a location on the planet.  Configuring this feature is discussed later.
