@@ -1,6 +1,5 @@
 from django.core.urlresolvers import reverse, NoReverseMatch
 from django.http import Http404
-from django.shortcuts import render_to_response
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
@@ -49,7 +48,7 @@ class VisitorTrackingMiddleware:
         prefixes = utils.get_untracked_prefixes()
 
         # don't track media file requests
-        if settings.MEDIA_URL:
+        if settings.MEDIA_URL and settings.MEDIA_URL != '/':
             prefixes.append(settings.MEDIA_URL)
         if settings.ADMIN_MEDIA_PREFIX:
             prefixes.append(settings.ADMIN_MEDIA_PREFIX)

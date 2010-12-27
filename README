@@ -1,8 +1,14 @@
-django-tracking is a simple attempt at keeping track of visitors to Django-powered Web sites.  It also offers basic blacklisting capabilities.
+``django-tracking`` is a simple attempt at keeping track of visitors to
+Django-powered Web sites.  It also offers basic blacklisting capabilities.
 
-==Features==
+The offial repository for ``django-tracking`` is at
+http://bitbucket.org/codekoala/django-tracking.  Please file any tickets there.
 
-  * Tracks the following information about your visitors:
+Features
+========
+
+* Tracks the following information about your visitors:
+
     * Session key
     * IP address
     * User agent
@@ -10,144 +16,198 @@ django-tracking is a simple attempt at keeping track of visitors to Django-power
     * Where they came from (http-referer)
     * What page on your site they last visited
     * How many pages on your site they have visited
-  * Allows user-agent filtering for visitor tracking
-  * Automatic clean-up of old visitor records
-  * Can ban certain IP addresses, rendering the site useless to visitors from those IP's (great for stopping spam)
-  * The ability to have a live feed of active users on your website
-  * Template tags to:
+
+* Allows user-agent filtering for visitor tracking
+* Automatic clean-up of old visitor records
+* Can ban certain IP addresses, rendering the site useless to visitors from
+  those IP's (great for stopping spam)
+* The ability to have a live feed of active users on your website
+* Template tags to:
+
     * display how many active users there are on your site
     * determine how many active users are on the same page within your site
-  * Optional "Active Visitors Map" to see where visitors are in the world
 
-==Requirements==
+* Optional "Active Visitors Map" to see where visitors are in the world
 
-As far as I am aware, the only requirement for django-tracking to work is a modern version of Django.  I developed the project on Django 1.0 alpha 2 and beta 1.  It is designed to work with the newforms-admin functionality.
+Requirements
+============
 
-If you wish to use a Google Map to display where your visitors are probably at, you must have a Google Maps API key, which is free (http://code.google.com/intl/ro/apis/maps/signup.html).  Along with that, you must have the GeoIP C API installed (http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz) and the GeoIP Python API (http://geolite.maxmind.com/download/geoip/api/python/GeoIP-Python-1.2.4.tar.gz).  Finally, you might want to grab the GeoLite City binary unless you are a paying MaxMind customer.  Configuring this feature is discussed later.
+As far as I am aware, the only requirement for django-tracking to work is a
+modern version of Django.  I developed the project on Django 1.0 alpha 2 and
+beta 1.  It is designed to work with the newforms-admin functionality.
 
-==Installation==
+If you wish to use a Google Map to display where your visitors are probably at,
+you must have a `Google Maps API key
+<http://code.google.com/intl/ro/apis/maps/signup.html>`_, which is free.  Along
+with that, you must have the `GeoIP C API
+<http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz>`_ installed and
+the `GeoIP Python API
+<http://geolite.maxmind.com/download/geoip/api/python/GeoIP-Python-1.2.4.tar.gz>`_.
+Finally, you might want to grab the GeoLite City binary unless you are a paying
+MaxMind customer.  Configuring this feature is discussed later.
 
-Download `django-tracking` using *one* of the following methods:
+Installation
+============
 
-===pip===
+Download ``django-tracking`` using *one* of the following methods:
 
-You can download the package from the [http://pypi.python.org/pypi/django-tracking/ CheeseShop] or use
+pip
+---
 
-{{{
-pip install django-tracking
-}}}
+You can download the package from the `CheeseShop
+<http://pypi.python.org/pypi/django-tracking/>`_ or use::
 
-to download and install `django-tracking`.
+    pip install django-tracking
 
-===easy_install===
+to download and install ``django-tracking``.
 
-You can download the package from the [http://pypi.python.org/pypi/django-tracking/ CheeseShop] or use
+easy_install
+------------
 
-{{{
-easy_install django-tracking
-}}}
+You can download the package from the `CheeseShop <http://pypi.python.org/pypi/django-tracking/>`_ or use::
 
-to download and install `django-tracking`.
+    easy_install django-tracking
 
-===Checkout from Subversion===
+to download and install ``django-tracking``.
 
-{{{
-svn co http://django-tracking.googlecode.com/svn/trunk/ django-tracking
-}}}
+Checkout from BitBucket/GitHub/Google Code
+------------------------------------------
 
-===Package Download===
+Use one of the following commands::
 
-Download the latest `.tar.gz` file from the downloads section and extract it somewhere you'll remember.
+    hg clone http://bitbucket.org/codekoala/django-tracking
+    git clone http://github.com/codekoala/django-tracking.git
+    hg clone http://django-tracking.googlecode.com/hg/ django-tracking
 
-The `setup.py` script for this project doesn't seem to install the templates associated with `django-tracking` (at least on my wife's Mac), but I am working to figure out why.
+Package Download
+================
 
-==Configuration==
+Download the latest ``.tar.gz`` file from the downloads section and extract it
+somewhere you'll remember.
 
-First of all, you must add this project to your list of `INSTALLED_APPS` in `settings.py`:
+Configuration
+=============
 
-{{{
-INSTALLED_APPS = (
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    ...
-    'tracking',
-    ...
-)
-}}}
+First of all, you must add this project to your list of ``INSTALLED_APPS`` in
+``settings.py``::
 
-Run `manage.py syncdb`.  This creates a few tables in your database that are necessary for operation.
+    INSTALLED_APPS = (
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.sites',
+        ...
+        'tracking',
+        ...
+    )
+
+Run ``manage.py syncdb``.  This creates a few tables in your database that are
+necessary for operation.
 
 Depending on how you wish to use this application, you have a few options:
 
-===Visitor Tracking===
+Visitor Tracking
+----------------
 
-Add `tracking.middleware.VisitorTrackingMiddleware` to your `MIDDLEWARE_CLASSES` in `settings.py`.  It must be
-underneath the `AuthenticationMiddleware`, so that `request.user` exists.
+Add ``tracking.middleware.VisitorTrackingMiddleware`` to your
+``MIDDLEWARE_CLASSES`` in ``settings.py``.  It must be underneath the
+``AuthenticationMiddleware``, so that ``request.user`` exists.
 
-====Automatic Visitor Clean-Up====
+Automatic Visitor Clean-Up
+++++++++++++++++++++++++++
 
-If you want to have Django automatically clean past visitor information out your database, put `tracking.middleware.VisitorCleanUpMiddleware`in your `MIDDLEWARE_CLASSES`.
+If you want to have Django automatically clean past visitor information out
+your database, put ``tracking.middleware.VisitorCleanUpMiddleware`` in your
+``MIDDLEWARE_CLASSES``.
 
-===IP Banning===
+IP Banning
+----------
 
-Add `tracking.middleware.BannedIPMiddleware` to your `MIDDLEWARE_CLASSES` in `settings.py`.  I would recommend making this the very first item in `MIDDLEWARE_CLASSES` so your banned users do not have to drill through any other middleware before Django realizes they don't belong on your site.
+Add ``tracking.middleware.BannedIPMiddleware`` to your ``MIDDLEWARE_CLASSES``
+in ``settings.py``.  I would recommend making this the very first item in
+``MIDDLEWARE_CLASSES`` so your banned users do not have to drill through any
+other middleware before Django realizes they don't belong on your site.
 
-===Visitors on Page (template tag)===
+Visitors on Page (template tag)
+-------------------------------
 
-Make sure that `django.core.context_processors.request` is somewhere in your `TEMPLATE_CONTEXT_PROCESSORS` tuple.  This context processor makes the `request` object accessible to your templates.  This application uses the `request` object to determine what page the user is looking at in a template tag.
+Make sure that ``django.core.context_processors.request`` is somewhere in your
+``TEMPLATE_CONTEXT_PROCESSORS`` tuple.  This context processor makes the
+``request`` object accessible to your templates.  This application uses the
+``request`` object to determine what page the user is looking at in a template
+tag.
 
-==Active Visitors Map==
+Active Visitors Map
+===================
 
-If you're interested in seeing where your visitors are at a given point in time, you might enjoy the active visitor map feature.  Be sure you have added a line to your main URLconf, as follows:
+If you're interested in seeing where your visitors are at a given point in
+time, you might enjoy the active visitor map feature.  Be sure you have added a
+line to your main URLconf, as follows::
 
-{{{
-from django.conf.urls.defaults import *
+    from django.conf.urls.defaults import *
 
-urlpatterns = patterns('',
-    ....
-    (r'^tracking/', include('tracking.urls')),
-    ....
-)
-}}}
+    urlpatterns = patterns('',
+        ....
+        (r'^tracking/', include('tracking.urls')),
+        ....
+    )
 
-Next, set a couple of settings in your `settings.py`:
+Next, set a couple of settings in your ``settings.py``:
 
- * `GOOGLE_MAPS_KEY`: Your very own Google Maps API key
- * `TRACKING_USE_GEOIP`: set this to `True` if you want to see markers on the map
- * `GEOIP_DATA_FILE`: set this to the absolute path on the filesystem of your `GeoIP.dat` or `GeoIPCity.dat` or whatever file.  It's usually something like `/usr/local/share/GeoIP.dat` or `/usr/share/GeoIP/GeoIP.dat`.  You can try leaving this blank if you want; the code will look in the default location if possible.
+* ``GOOGLE_MAPS_KEY``: Your very own Google Maps API key
+* ``TRACKING_USE_GEOIP``: set this to ``True`` if you want to see markers on
+  the map
+* ``GEOIP_DATA_FILE``: set this to the absolute path on the filesystem of your
+  ``GeoIP.dat`` or ``GeoIPCity.dat`` or whatever file.  It's usually something
+  like ``/usr/local/share/GeoIP.dat`` or ``/usr/share/GeoIP/GeoIP.dat``.  You
+  can try leaving this blank if you want; the code will look in the default
+  location if possible.
 
-When that's done, you should be able to go to `/tracking/map/` on your site (replacing `tracking` with whatever prefix you chose to use in your URLconf, obviously).  The default template relies upon jQuery for its awesomeness, but you're free to use whatever you would like.
+When that's done, you should be able to go to ``/tracking/map/`` on your site
+(replacing ``tracking`` with whatever prefix you chose to use in your URLconf,
+obviously).  The default template relies upon jQuery for its awesomeness, but
+you're free to use whatever you would like.
 
-==Usage==
+Usage
+=====
 
-To display the number of active users there are in one of your templates, make sure you have `{% load tracking_tags %}` somewhere in your template and do something like this:
+To display the number of active users there are in one of your templates, make
+sure you have ``{% load tracking_tags %}`` somewhere in your template and do
+something like this::
 
-{{{
-{% visitors_on_site as visitors %}
-<p>
-    {{ visitors }} active user{{ visitors|pluralize }}
-</p>
-}}}
+    {% visitors_on_site as visitors %}
+    <p>
+        {{ visitors }} active user{{ visitors|pluralize }}
+    </p>
 
-If you also want to show how many people are looking at the same page:
+If you also want to show how many people are looking at the same page::
 
-{{{
-{% visitors_on_page as same_page %}
-<p>
-    {{ same_page }} of {{ visitors }} active user{{ visitors|pluralize }}
-    {% ifequal same_page 1 %}is{% else %}are{% endifequal %} reading this page
-</p>
-}}}
+    {% visitors_on_page as same_page %}
+    <p>
+        {{ same_page }} of {{ visitors }} active user{{ visitors|pluralize }}
+        {% ifequal same_page 1 %}is{% else %}are{% endifequal %} reading this page
+    </p>
 
-If you don't want particular areas of your site to be tracked, you may define a list of prefixes in your `settings.py` using the `NO_TRACKING_PREFIXES`.  For example, if you didn't want visits to the `/family/` section of your website, set `NO_TRACKING_PREFIXES` to `['/family/']`.
+If you don't want particular areas of your site to be tracked, you may define a
+list of prefixes in your ``settings.py`` using the ``NO_TRACKING_PREFIXES``.  For
+example, if you didn't want visits to the ``/family/`` section of your website,
+set ``NO_TRACKING_PREFIXES`` to ``['/family/']``.
 
-If you don't want to count certain user-agents, such as Yahoo!'s Slurp and Google's Googlebot, you may add keywords to your visitor tracking in your Django administration interface.  Look for "Untracked User-Agents" and add a keyword that distinguishes a particular user-agent.  Any visitors with the keyword in their user-agent string will not be tracked.
+If you don't want to count certain user-agents, such as Yahoo!'s Slurp and
+Google's Googlebot, you may add keywords to your visitor tracking in your
+Django administration interface.  Look for "Untracked User-Agents" and add a
+keyword that distinguishes a particular user-agent.  Any visitors with the
+keyword in their user-agent string will not be tracked.
 
-By default, active users include any visitors within the last 10 minutes.  If you would like to override that setting, just set `TRACKING_TIMEOUT` to however many minutes you want in your `settings.py`.
+By default, active users include any visitors within the last 10 minutes.  If
+you would like to override that setting, just set ``TRACKING_TIMEOUT`` to however
+many minutes you want in your ``settings.py``.
 
-For automatic visitor clean-up, any records older than 24 hours are removed by default.  If you would like to override that setting, set `TRACKING_CLEANUP_TIMEOUT` to however many hours you want in your `settings.py`.
+For automatic visitor clean-up, any records older than 24 hours are removed by
+default.  If you would like to override that setting, set
+``TRACKING_CLEANUP_TIMEOUT`` to however many hours you want in your
+``settings.py``.
 
-Good luck!  Please contact me with any questions or concerns you have with the project!
+Good luck!  Please contact me with any questions or concerns you have with the
+project!
