@@ -2,9 +2,13 @@ from datetime import datetime, timedelta
 import logging
 import traceback
 
+from django.contrib.gis.utils import HAS_GEOIP
+
+if HAS_GEOIP:
+    from django.contrib.gis.utils import GeoIP, GeoIPException
+
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.gis.utils import GeoIP, GeoIPException, HAS_GEOIP
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from tracking import utils
