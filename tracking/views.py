@@ -5,7 +5,8 @@ from django.template import RequestContext, Context, loader
 from django.shortcuts import render_to_response
 from django.conf import settings
 from django.utils.translation import ungettext
-from tracking.models import Visitor, u_clean as uc
+from tracking.models import Visitor
+from tracking.utils import u_clean as uc
 from datetime import datetime
 
 DEFAULT_TRACKING_TEMPLATE = getattr(settings, 'DEFAULT_TRACKING_TEMPLATE',
@@ -89,7 +90,7 @@ def friendly_time(last_update):
 
     return friendly_time
 
-def display_map(request, template_name=DEFAULT_TRACKING_TEMPLATE, 
+def display_map(request, template_name=DEFAULT_TRACKING_TEMPLATE,
         extends_template='base.html'):
     """
     Displays a map of recently active users.  Requires a Google Maps API key

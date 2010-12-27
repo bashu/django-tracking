@@ -1,5 +1,6 @@
 from django.conf import settings
 import re
+import unicodedata
 
 # this is not intended to be an all-knowing IP address regex
 IP_RE = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
@@ -51,3 +52,26 @@ def get_untracked_prefixes():
     gets a list of prefixes that shouldn't be tracked
     """
     return getattr(settings, 'NO_TRACKING_PREFIXES', [])
+
+def u_clean(s):
+    """A strange attempt at cleaning up unicode"""
+
+    uni = ''
+    try:
+        # try this first
+        uni = str(s).decode('iso-8859-1')
+    except UnicodeDecodeError:
+        try:
+            # try utf-8 next
+            uni = str(s).decode('utf-8')
+        except UnicodeDecodeError:
+            # last resort method... one character at a time (ugh)
+            if s and type(s) in (str, unicode):
+                for c in s:
+                    try:
+                        uni += unicodedata.normalize('NFKC', unicode(c))
+                    except UnicodeDecodeError:
+                        uni += '-'
+
+    return uni.encode('ascii', 'xmlcharrefreplace')
+

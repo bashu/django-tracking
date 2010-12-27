@@ -1,36 +1,11 @@
-from django.db import models
-from django.contrib.auth.models import User
+from datetime import datetime, timedelta
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.gis.utils import GeoIP
+from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from tracking import utils
-from datetime import datetime, timedelta
 import os
-import unicodedata
-
-try:
-    import GeoIP
-except ImportError:
-    GeoIP = None
-
-def u_clean(s):
-    uni = ''
-    try:
-        # try this first
-        uni = str(s).decode('iso-8859-1')
-    except UnicodeDecodeError:
-        try:
-            # try utf-8 next
-            uni = str(s).decode('utf-8')
-        except UnicodeDecodeError:
-            # last resort method... one character at a time
-            if s and type(s) in (str, unicode):
-                for c in s:
-                    try:
-                        uni += unicodedata.normalize('NFKC', unicode(c))
-                    except UnicodeDecodeError:
-                        uni += '-'
-
-    return uni.encode('ascii', 'xmlcharrefreplace')
 
 class VisitorManager(models.Manager):
     def active(self, timeout=None):
@@ -84,11 +59,8 @@ class Visitor(models.Model):
         if getattr(settings, 'TRACKING_USE_GEOIP', False) and GeoIP:
             geoip_data_file = getattr(settings, 'GEOIP_DATA_FILE', None)
 
-            if geoip_data_file:
-                assert os.access(geoip_data_file, os.R_OK)
+            if geoip_data_file and os.access(geoip_data_file, os.R_OK):
                 gip = GeoIP.open(geoip_data_file, GeoIP.GEOIP_MEMORY_CACHE)
-            else:
-                gip = GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
 
             try:
                 return gip.record_by_addr(self.ip_address)
@@ -96,7 +68,9 @@ class Visitor(models.Model):
                 # if we get here, chances are that we didn't get a result for
                 # the IP
                 pass
+
         return None
+
     geoip_data = property(_get_geoip_data)
 
     def _get_geoip_data_json(self):
@@ -108,9 +82,9 @@ class Visitor(models.Model):
         if not self.geoip_data: return {}
 
         for key,value in self.geoip_data.items():
-            #print 'Cleaning: %s :: %s' % (key, value)
-            clean[key] = u_clean(value)
+            clean[key] = utils.u_clean(value)
         return clean
+
     geoip_data_json = property(_get_geoip_data_json)
 
     class Meta:

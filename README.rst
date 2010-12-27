@@ -38,13 +38,13 @@ beta 1.  It is designed to work with the newforms-admin functionality.
 
 If you wish to use a Google Map to display where your visitors are probably at,
 you must have a `Google Maps API key
-<http://code.google.com/intl/ro/apis/maps/signup.html>`_, which is free.  Along
-with that, you must have the `GeoIP C API
-<http://geolite.maxmind.com/download/geoip/api/c/GeoIP.tar.gz>`_ installed and
-the `GeoIP Python API
-<http://geolite.maxmind.com/download/geoip/api/python/GeoIP-Python-1.2.4.tar.gz>`_.
-Finally, you might want to grab the GeoLite City binary unless you are a paying
-MaxMind customer.  Configuring this feature is discussed later.
+<http://code.google.com/intl/ro/apis/maps/signup.html>`_, which is free.  In
+the past, you were required to have a couple of GeoIP API libraries.  Since
+version 0.2.11, these dependencies have been replaced with Django's built-in
+GIS utilities.  You might want to grab the `GeoLite City binary
+<http://www.maxmind.com/app/geolitecity>`_ unless you are a paying MaxMind
+customer.  This is the data file that ``django-tracking`` uses to translate an
+IP into a location on the planet.  Configuring this feature is discussed later.
 
 Installation
 ============
@@ -163,6 +163,8 @@ Next, set a couple of settings in your ``settings.py``:
   like ``/usr/local/share/GeoIP.dat`` or ``/usr/share/GeoIP/GeoIP.dat``.  You
   can try leaving this blank if you want; the code will look in the default
   location if possible.
+* ``DEFAULT_TRACKING_TEMPLATE``: The template to use when generating the
+  visitor map.  Defaults to ``tracking/visitor_map.html``.
 
 When that's done, you should be able to go to ``/tracking/map/`` on your site
 (replacing ``tracking`` with whatever prefix you chose to use in your URLconf,
