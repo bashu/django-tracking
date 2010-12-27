@@ -1,11 +1,18 @@
 from datetime import datetime, timedelta
+import logging
+import traceback
+
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.gis.utils import GeoIP
+from django.contrib.gis.utils import GeoIP, GeoIPException, HAS_GEOIP
 from django.db import models
 from django.utils.translation import ugettext, ugettext_lazy as _
 from tracking import utils
-import os
+
+USE_GEOIP = getattr(settings, 'TRACKING_USE_GEOIP', False)
+CACHE_TYPE = getattr(settings, 'GEOIP_CACHE_TYPE', 4)
+
+log = logging.getLogger('tracking.models')
 
 class VisitorManager(models.Manager):
     def active(self, timeout=None):
@@ -56,20 +63,22 @@ class Visitor(models.Model):
         """
         Attempts to retrieve MaxMind GeoIP data based upon the visitor's IP
         """
-        if getattr(settings, 'TRACKING_USE_GEOIP', False) and GeoIP:
-            geoip_data_file = getattr(settings, 'GEOIP_DATA_FILE', None)
 
-            if geoip_data_file and os.access(geoip_data_file, os.R_OK):
-                gip = GeoIP.open(geoip_data_file, GeoIP.GEOIP_MEMORY_CACHE)
+        if not HAS_GEOIP or not USE_GEOIP:
+            # go no further when we don't need to
+            log.debug('Bailing out.  HAS_GEOIP: %s; TRACKING_USE_GEOIP: %s' % (HAS_GEOIP, USE_GEOIP))
+            return None
 
+        if not hasattr(self, '_geoip_data'):
+            self._geoip_data = None
             try:
-                return gip.record_by_addr(self.ip_address)
-            except SystemError:
-                # if we get here, chances are that we didn't get a result for
-                # the IP
-                pass
+                gip = GeoIP(cache=CACHE_TYPE)
+                self._geoip_data = gip.city(self.ip_address)
+            except GeoIPException:
+                # don't even bother...
+                log.error('Error getting GeoIP data for IP "%s": %s' % (self.ip_address, traceback.format_exc()))
 
-        return None
+        return self._geoip_data
 
     geoip_data = property(_get_geoip_data)
 

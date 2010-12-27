@@ -61,7 +61,7 @@ function createMarkers() {
                     var listHtml = '<div id="au-' + user.id + '" ' +
                         'class="active-user location-info"><h3>' +
                         user.geoip.city + '</h3><div>' + img +
-                        user.geoip.region_name + ', ' +
+                        user.geoip.region + ', ' +
                         user.geoip.country_name + '</div>' +
                         '<div><strong>Viewing</strong> <span id="auu-' + user.id +'">' +
                         url + '</span></div>' +
@@ -116,7 +116,7 @@ function createMarker(point, user, img) {
     marker.value = user.id;
 
     var myHtml = '<div class="mapOverlay"><h3>' + user.geoip.city + '</h3>';
-    myHtml += '<div>' + img + user.geoip.region_name;
+    myHtml += '<div>' + img + user.geoip.region;
     myHtml += ', ' + user.geoip.country_name + '</div></div>';
 
     // Add a listener to pop up an info box when the mouse goes over a marker

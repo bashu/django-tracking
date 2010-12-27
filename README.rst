@@ -158,11 +158,23 @@ Next, set a couple of settings in your ``settings.py``:
 * ``GOOGLE_MAPS_KEY``: Your very own Google Maps API key
 * ``TRACKING_USE_GEOIP``: set this to ``True`` if you want to see markers on
   the map
-* ``GEOIP_DATA_FILE``: set this to the absolute path on the filesystem of your
+* ``GEOIP_PATH``: set this to the absolute path on the filesystem of your
   ``GeoIP.dat`` or ``GeoIPCity.dat`` or whatever file.  It's usually something
-  like ``/usr/local/share/GeoIP.dat`` or ``/usr/share/GeoIP/GeoIP.dat``.  You
-  can try leaving this blank if you want; the code will look in the default
-  location if possible.
+  like ``/usr/local/share/GeoIP.dat`` or ``/usr/share/GeoIP/GeoIP.dat``.
+* ``GEOIP_CACHE_TYPE``: The type of caching to use when dealing with GeoIP data:
+
+    * ``0``: read database from filesystem, uses least memory.
+    * ``1``: load database into memory, faster performance but uses more
+      memory.
+    * ``2``: check for updated database.  If database has been updated, reload
+      filehandle and/or memory cache.
+    * ``4``: just cache the most frequently accessed index portion of the
+      database, resulting in faster lookups than ``GEOIP_STANDARD``, but less
+      memory usage than ``GEOIP_MEMORY_CACHE`` - useful for larger databases
+      such as GeoIP Organization and GeoIP City.  Note, for GeoIP Country,
+      Region and Netspeed databases, ``GEOIP_INDEX_CACHE`` is equivalent to
+      ``GEOIP_MEMORY_CACHE``. *default*
+
 * ``DEFAULT_TRACKING_TEMPLATE``: The template to use when generating the
   visitor map.  Defaults to ``tracking/visitor_map.html``.
 

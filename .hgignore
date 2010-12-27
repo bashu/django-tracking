@@ -1,4 +1,8 @@
 syntax: glob
+dist
+build
+*.egg*
 *.pyc
 *.swp
+*.log
 MANIFEST

@@ -88,7 +88,7 @@ def friendly_time(last_update):
                 seconds
         ) % {'seconds': seconds })
 
-    return friendly_time
+    return friendly_time or 0
 
 def display_map(request, template_name=DEFAULT_TRACKING_TEMPLATE,
         extends_template='base.html'):

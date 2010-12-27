@@ -1,17 +1,21 @@
 from datetime import datetime, timedelta
+import logging
 import random
-import time
 import re
+import time
+import traceback
 import urllib, urllib2
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
 from django.db.utils import DatabaseError
 from django.http import Http404
 from tracking import utils
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 
 title_re = re.compile('<title>(.*?)</title>')
+log = logging.getLogger('tracking.middleware')
 
 class VisitorTrackingMiddleware:
     """
@@ -33,10 +37,19 @@ class VisitorTrackingMiddleware:
         ip_address = utils.get_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
 
+        # retrieve untracked user agents from cache
+        ua_key = '_tracking_untracked_uas'
+        untracked = cache.get(ua_key)
+        if untracked is None:
+            log.info('Updating untracked user agent cache')
+            untracked = UntrackedUserAgent.objects.all()
+            cache.set(ua_key, untracked, 3600)
+
         # see if the user agent is not supposed to be tracked
-        for ua in UntrackedUserAgent.objects.all():
+        for ua in untracked:
             # if the keyword is found in the user agent, stop tracking
             if unicode(user_agent, errors='ignore').find(ua.keyword) != -1:
+                log.debug('Not tracking UA "%s" because of keyword: %s' % (user_agent, ua.keyword))
                 return
 
         if hasattr(request, 'session'):
@@ -51,6 +64,7 @@ class VisitorTrackingMiddleware:
         # ensure that the request.path does not begin with any of the prefixes
         for prefix in prefixes:
             if request.path.startswith(prefix):
+                log.debug('Not tracking request to: %s' % request.path)
                 return
 
         # if we get here, the URL needs to be tracked
@@ -66,7 +80,7 @@ class VisitorTrackingMiddleware:
         try:
             visitor = Visitor.objects.get(**attrs)
         except Visitor.DoesNotExist:
-            # see if there's a visitor with the same IP and session key
+            # see if there's a visitor with the same IP and user agent
             # within the last 5 minutes
             cutoff = now - timedelta(minutes=5)
             visitors = Visitor.objects.filter(
@@ -78,9 +92,11 @@ class VisitorTrackingMiddleware:
             if len(visitors):
                 visitor = visitors[0]
                 visitor.session_key = session_key
+                log.debug('Using existing visitor for IP %s / UA %s: %s' % (ip_address, user_agent, visitor.id))
             else:
                 # it's probably safe to assume that the visitor is brand new
                 visitor = Visitor(**attrs)
+                log.debug('Created a new visitor: %s' % attrs)
         except:
             return
 
@@ -109,15 +125,18 @@ class VisitorTrackingMiddleware:
         try:
             visitor.save()
         except DatabaseError:
-            pass
+            log.error('There was a problem saving visitor information:\n%s\n\n%s' % (traceback.format_exc(), locals()))
 
 class VisitorCleanUpMiddleware:
-    """
-    Clean up old visitor tracking records in the database
-    """
+    """Clean up old visitor tracking records in the database"""
+
     def process_request(self, request):
-        timeout = datetime.now() - timedelta(hours=utils.get_cleanup_timeout())
-        Visitor.objects.filter(last_update__lte=timeout).delete()
+        timeout = utils.get_cleanup_timeout()
+
+        if str(timeout).isdigit():
+            log.debug('Cleaning up visitors older than %s hours' % timeout)
+            timeout = datetime.now() - timedelta(hours=int(timeout))
+            Visitor.objects.filter(last_update__lte=timeout).delete()
 
 class BannedIPMiddleware:
     """
@@ -127,71 +146,16 @@ class BannedIPMiddleware:
     The banned users do not actually receive the 404 error--instead they get
     an "Internal Server Error", effectively eliminating any access to the site.
     """
+
     def process_request(self, request):
-        # compile a list of all banned IP addresses
-        try:
+        key = '_tracking_banned_ips'
+        ips = cache.get(key)
+        if ips is None:
+            # compile a list of all banned IP addresses
+            log.info('Updating banned IPs cache')
             ips = [b.ip_address for b in BannedIP.objects.all()]
-        except:
-            # in case we don't have the database setup yet
-            ips = []
+            cache.set(key, ips, 3600)
 
         # check to see if the current user's IP address is in that list
         if utils.get_ip(request) in ips:
             raise Http404
-
-class GoogleAnalyticsMiddleware:
-    """
-    This is a server-side version of the Google Analytics tracking.  It should
-    be able to track things like requests to RSS feeds and whatnot, but it does
-    tend to lose some information, such as the IP the request is coming from.
-
-    ******* THIS IS NON-OPERATIONAL FOR THE TIME BEING *******
-    """
-    def process_response(self, request, response):
-        # get the title from the response if possible
-        try:
-            title = title_re.search(response.content).group(1)
-        except:
-            title = ''
-
-        host = request.META.get('HTTP_HOST', '')
-        path = request.META.get('PATH_INFO', '/')
-
-        cookie = random.randint(10000000, 99999999)
-        rand = random.randint(1000000000, 3188019257283953000)
-        today = int(time.mktime(datetime.now().timetuple()))
-        small = random.randint(3, 50)
-
-        utmcc = '__utma=%(r1)i.%(r2)i.%(r3)i.%(r3)i.%(r3)i.%(r4)i;+__utmz=%(r1)i.%(r3)i.%(r4)i.%(r4)i.utmscr=%(host)s|utmccn=(referral)|utmcmd=referral|utmcct=%(path)s;' % {
-            'r1': cookie,       'r2': rand,         'r3': today,
-            'r4': small,        'host': host,       'path': path
-        }
-
-        # setup a dictionary of values for use in the query string
-        info = {
-            'utmwv': 4.3,
-            'utmac': settings.GOOGLE_ANALYTICS_ID,
-            'utmhn': host,
-            'utmp': path,
-            'utmr': request.META.get('HTTP_REFERER', '-'),
-            'utmcc': utmcc,
-            'utmn': random.randint(1000000000, 9999999999),
-            'utmcs': 'UTF-8',
-            'utmsr': '800x600',                                     # resolution
-            'utmsc': '16-bit',                                      # color-depth
-            'utmul': 'en-us',                                       # language
-            'utmje': '0',                                           # java
-            'utmfl': '9.0  r115',                                   # flash
-            'utmdt': title,                                         # title
-        }
-
-        # put all of the info values where they belong
-        url = 'http://www.google-analytics.com/__utm.gif'
-        data = '&'.join(['%s=%s' % (k, urllib.quote(str(info[k]))) for k in info])
-
-        # talk to Google Analytics
-        conn = urllib2.urlopen('%s?%s' % (url, data))
-        conn.read()
-
-        # send the response back to the client
-        return response

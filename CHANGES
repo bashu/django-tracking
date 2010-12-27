@@ -2,6 +2,40 @@
 django-tracking changes
 =======================
 
+0.3.5
+-----
+
+- Using Django's GIS utilities a little better
+- Added caching in the middleware to reduce hits to the database
+- Added some logging
+
+0.3.3
+-----
+
+- Improved the setup.py script
+
+0.3.2
+-----
+
+- Merged changes from ramusus to better deal with the unicode problems
+
+0.3.1
+-----
+
+- Trying to handle some unicode problems
+- Added a sample base.html template
+- Code cleaning
+
+0.3.0
+-----
+
+- Fixed several bugs dealing with performance
+- Improved stability
+- Added some German translations
+- Removed dependency on GeoIP C API and Python API in favor of Django's
+  built-in GIS utilities
+- Tweaked the active users map
+
 0.2.5
 -----
 
