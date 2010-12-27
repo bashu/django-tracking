@@ -1,14 +1,14 @@
-from django.core.urlresolvers import reverse, NoReverseMatch
-from django.http import Http404
-from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
-from tracking.models import Visitor, UntrackedUserAgent, BannedIP
-from tracking import utils
 from datetime import datetime, timedelta
 import random
 import time
 import re
 import urllib, urllib2
+
+from django.http import Http404
+from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
+from tracking.models import Visitor, UntrackedUserAgent, BannedIP
+from tracking import utils
 
 title_re = re.compile('<title>(.*?)</title>')
 
@@ -45,20 +45,7 @@ class VisitorTrackingMiddleware:
             # otherwise just fake a session key
             session_key = '%s:%s' % (ip_address, user_agent)
 
-        prefixes = utils.get_untracked_prefixes()
-
-        # don't track media file requests
-        if settings.MEDIA_URL and settings.MEDIA_URL != '/':
-            prefixes.append(settings.MEDIA_URL)
-        if settings.ADMIN_MEDIA_PREFIX:
-            prefixes.append(settings.ADMIN_MEDIA_PREFIX)
-
-        try:
-            # finally, don't track requests to the tracker update pages
-            prefixes.append(reverse('tracking-refresh-active-users'))
-        except NoReverseMatch:
-            # django-tracking hasn't been included in the URLconf if we get here
-            pass
+        prefixes = getattr(settings, 'NO_TRACKING_PREFIXES', [])
 
         # ensure that the request.path does not begin with any of the prefixes
         for prefix in prefixes:
