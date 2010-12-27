@@ -31,7 +31,7 @@ class VisitorTrackingMiddleware:
 
         # create some useful variables
         ip_address = utils.get_ip(request)
-        user_agent = utils.u_clean(request.META.get('HTTP_USER_AGENT', '')[:255])
+        user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
 
         # see if the user agent is not supposed to be tracked
         for ua in UntrackedUserAgent.objects.all():
