@@ -1,6 +1,6 @@
 import listeners
 
-VERSION = (0, 3, 6)
+VERSION = (0, 3, 7)
 
 def get_version():
     "Returns the version as a human-format string."

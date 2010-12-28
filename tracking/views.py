@@ -6,7 +6,7 @@ from django.conf import settings
 from django.http import Http404, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext, Context, loader
-from django.utils.simplejson.encoder import JSONEncoder
+from django.utils.simplejson import JSONEncoder
 from django.utils.translation import ungettext
 from django.views.decorators.cache import never_cache
 from tracking.models import Visitor
