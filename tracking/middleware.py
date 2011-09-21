@@ -1,23 +1,22 @@
 from datetime import datetime, timedelta
 import logging
-import random
 import re
-import time
 import traceback
-import urllib, urllib2
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
+from django.core.urlresolvers import reverse, NoReverseMatch
 from django.db.utils import DatabaseError
 from django.http import Http404
+
 from tracking import utils
 from tracking.models import Visitor, UntrackedUserAgent, BannedIP
 
 title_re = re.compile('<title>(.*?)</title>')
 log = logging.getLogger('tracking.middleware')
 
-class VisitorTrackingMiddleware:
+class VisitorTrackingMiddleware(object):
     """
     Keeps track of your active users.  Anytime a visitor accesses a valid URL,
     their unique record will be updated with the page they're on and the last
@@ -28,6 +27,32 @@ class VisitorTrackingMiddleware:
     records, so I added a check to see if the session key had changed for the
     same IP and user agent in the last 5 minutes
     """
+
+    @property
+    def prefixes(self):
+        """Returns a list of URL prefixes that we should not track"""
+
+        if not hasattr(self, '_prefixes'):
+            self._prefixes = getattr(settings, 'NO_TRACKING_PREFIXES', [])
+
+            if not getattr(settings, '_FREEZE_TRACKING_PREFIXES', False):
+                for name in ('MEDIA_URL', 'ADMIN_MEDIA_PREFIX'):
+                    url = getattr(settings, name)
+                    if url and url != '/':
+                        self._prefixes.append(url)
+
+                try:
+                    # finally, don't track requests to the tracker update pages
+                    self._prefixes.append(reverse('tracking-refresh-active-users'))
+                except NoReverseMatch:
+                    # django-tracking hasn't been included in the URLconf if we
+                    # get here, which is not a bad thing
+                    pass
+
+                settings.NO_TRACKING_PREFIXES = self._prefixes
+                settings._FREEZE_TRACKING_PREFIXES = True
+
+        return self._prefixes
 
     def process_request(self, request):
         # don't process AJAX requests
@@ -59,10 +84,8 @@ class VisitorTrackingMiddleware:
             # otherwise just fake a session key
             session_key = '%s:%s' % (ip_address, user_agent)
 
-        prefixes = getattr(settings, 'NO_TRACKING_PREFIXES', [])
-
         # ensure that the request.path does not begin with any of the prefixes
-        for prefix in prefixes:
+        for prefix in self.prefixes:
             if request.path.startswith(prefix):
                 log.debug('Not tracking request to: %s' % request.path)
                 return
