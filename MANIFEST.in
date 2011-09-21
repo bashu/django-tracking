@@ -1,4 +1,4 @@
 include README.rst LICENSE AUTHORS CHANGES
-recursive-include tracking/ *.*
-recursive-exclude tracking/ .*.swp *.pyc
-recursive-exclude demo/ *.*
+recursive-include tracking *.*
+recursive-exclude tracking .*.swp *.pyc
+recursive-exclude demo *.*
