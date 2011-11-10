@@ -36,7 +36,7 @@ class VisitorTrackingMiddleware(object):
             self._prefixes = getattr(settings, 'NO_TRACKING_PREFIXES', [])
 
             if not getattr(settings, '_FREEZE_TRACKING_PREFIXES', False):
-                for name in ('MEDIA_URL', 'ADMIN_MEDIA_PREFIX'):
+                for name in ('MEDIA_URL', 'STATIC_URL'):
                     url = getattr(settings, name)
                     if url and url != '/':
                         self._prefixes.append(url)
