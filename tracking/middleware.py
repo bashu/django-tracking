@@ -36,7 +36,7 @@ class VisitorTrackingMiddleware(object):
             self._prefixes = getattr(settings, 'NO_TRACKING_PREFIXES', [])
 
             if not getattr(settings, '_FREEZE_TRACKING_PREFIXES', False):
-                for name in ('MEDIA_URL', 'ADMIN_MEDIA_PREFIX'):
+                for name in ('MEDIA_URL', 'STATIC_URL'):
                     url = getattr(settings, name)
                     if url and url != '/':
                         self._prefixes.append(url)
@@ -60,7 +60,7 @@ class VisitorTrackingMiddleware(object):
 
         # create some useful variables
         ip_address = utils.get_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
+        user_agent = unicode(request.META.get('HTTP_USER_AGENT', '')[:255], errors='ignore')
 
         # retrieve untracked user agents from cache
         ua_key = '_tracking_untracked_uas'
@@ -73,7 +73,7 @@ class VisitorTrackingMiddleware(object):
         # see if the user agent is not supposed to be tracked
         for ua in untracked:
             # if the keyword is found in the user agent, stop tracking
-            if unicode(user_agent, errors='ignore').find(ua.keyword) != -1:
+            if user_agent.find(ua.keyword) != -1:
                 log.debug('Not tracking UA "%s" because of keyword: %s' % (user_agent, ua.keyword))
                 return
 
