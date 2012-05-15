@@ -77,12 +77,13 @@ class VisitorTrackingMiddleware(object):
                 log.debug('Not tracking UA "%s" because of keyword: %s' % (user_agent, ua.keyword))
                 return
 
-        if hasattr(request, 'session'):
+        if hasattr(request, 'session') and request.session.session_key:
             # use the current session key if we can
             session_key = request.session.session_key
         else:
             # otherwise just fake a session key
             session_key = '%s:%s' % (ip_address, user_agent)
+            session_key = session_key[:40]
 
         # ensure that the request.path does not begin with any of the prefixes
         for prefix in self.prefixes:
