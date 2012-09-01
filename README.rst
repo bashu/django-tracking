@@ -200,7 +200,7 @@ If you also want to show how many people are looking at the same page::
     {% visitors_on_page as same_page %}
     <p>
         {{ same_page }} of {{ visitors }} active user{{ visitors|pluralize }}
-        {% ifequal same_page 1 %}is{% else %}are{% endifequal %} reading this page
+        {{ same_page|pluralize:"is,are" }} reading this page
     </p>
 
 If you don't want particular areas of your site to be tracked, you may define a
