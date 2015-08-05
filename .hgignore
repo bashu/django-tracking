@@ -1,9 +1,0 @@
-syntax: glob
-dist
-build
-*.dat
-*.egg*
-*.pyc
-*.swp
-*.log
-MANIFEST
